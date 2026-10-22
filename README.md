@@ -6,11 +6,27 @@ The pipeline:
 
 1. Fetch the post or comment text.
 2. Retrieve the top 30 paragraphs with hybrid search (SQLite FTS5 BM25 plus Ollama embeddings, merged with reciprocal rank fusion).
-3. Ask Claude to pick up to 3 quotes. Claude returns only a passage ID and a sentence range.
+3. Ask an LLM to pick up to 3 quotes. The model returns only a passage ID and a sentence range.
 4. Build each quote from the stored sentences and check that it's an exact substring of the source paragraph.
 5. Show the candidates. You pick one, and the bot posts it.
 
-Because Claude never writes quote text, every quote is verbatim.
+Because the model never writes quote text, every quote is verbatim.
+
+## Choose an LLM
+
+Set `LLM_PROVIDER`, `LLM_MODEL`, and optionally `LLM_API_KEY` and `LLM_BASE_URL` in `.env`. Two providers are available:
+
+- `anthropic`: Claude models through the Anthropic API.
+- `openai`: any OpenAI-compatible chat completions API, such as OpenAI, Ollama, OpenRouter, Groq, vLLM, or LM Studio. To use a server other than OpenAI, set `LLM_BASE_URL`.
+
+| Setup | `LLM_PROVIDER` | `LLM_MODEL` | `LLM_BASE_URL` |
+| --- | --- | --- | --- |
+| Claude | `anthropic` | `claude-sonnet-5-5` | |
+| OpenAI | `openai` | `gpt-5` | |
+| Local Ollama | `openai` | `qwen3:8b` | `http://localhost:11434/v1` |
+| OpenRouter | `openai` | any model ID | `https://openrouter.ai/api/v1` |
+
+To add another provider, write a function in `llm.py` that takes a system prompt, a user prompt, and a JSON schema and returns a dict. Then register it in `PROVIDERS`.
 
 ## Setup
 
@@ -42,7 +58,7 @@ python main.py ingest                 # parse all works (re-running replaces the
 python main.py ingest --work manifesto
 python main.py embed                  # embed new paragraphs
 python main.py search "landlords are parasites"        # retrieval only
-python main.py quote "landlords are parasites"         # retrieval + Claude, no Reddit
+python main.py quote "landlords are parasites"         # retrieval + LLM, no Reddit
 python main.py reply <reddit-url> --dry-run
 python main.py reply <reddit-url> --author lenin
 ```

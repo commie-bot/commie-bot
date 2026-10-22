@@ -70,7 +70,7 @@ def embed():
 @click.option("--author", help="Only search this author (substring match).")
 @click.option("-k", default=10, show_default=True, help="Number of results.")
 def search(text, author, k):
-    """Show retrieved passages for TEXT, without calling Claude."""
+    """Show retrieved passages for TEXT, without calling the LLM."""
     conn = db.connect()
     for p in _search(conn, text, author, k):
         console.print(Panel(p["text"], title=f"[{p['id']}] {render.citation(p)}", title_align="left"))
@@ -122,7 +122,7 @@ def _search(conn, text, author, k=None):
 
 def _pick(conn, text, author) -> list[dict]:
     passages = _search(conn, text, author)
-    with console.status(f"Asking {config.MODEL} to pick quotes"):
+    with console.status(f"Asking {config.LLM_MODEL} to pick quotes"):
         picks = picker.pick(text, passages)
     choices = []
     for p in picks:

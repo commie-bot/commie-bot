@@ -1,13 +1,11 @@
-"""Ask Claude to pick the best sentence spans from retrieved passages.
+"""Ask an LLM to pick the best sentence spans from retrieved passages.
 
-Claude only returns passage IDs and sentence indexes. The quote text itself
+The model only returns passage IDs and sentence indexes. The quote text itself
 always comes from the database, so it can't be paraphrased or invented.
 """
-import json
 from xml.sax.saxutils import escape, quoteattr
 
-import anthropic
-
+import llm
 from config import config
 
 SYSTEM = """You pick quotes for a Reddit bot that replies to posts and comments with \
@@ -50,10 +48,6 @@ SCHEMA = {
 }
 
 
-class PickError(Exception):
-    pass
-
-
 def format_candidates(passages: list[dict]) -> str:
     blocks = []
     for p in passages:
@@ -65,35 +59,22 @@ def format_candidates(passages: list[dict]) -> str:
     return "\n\n".join(blocks)
 
 
-def pick(target_text: str, passages: list[dict], client: anthropic.Anthropic = None) -> list[dict]:
+def pick(target_text: str, passages: list[dict]) -> list[dict]:
     """Return validated picks: [{passage, start, end, reason}], best first."""
-    client = client or anthropic.Anthropic()
     by_id = {p["id"]: p for p in passages}
     user = (
         f"<target>\n{escape(target_text)}\n</target>\n\n"
         f"<candidates>\n{format_candidates(passages)}\n</candidates>"
     )
-    response = client.beta.messages.create(
-        model=config.MODEL,
-        max_tokens=16000,
-        betas=["server-side-fallback-2026-07-01"],
-        fallbacks="default",
-        system=SYSTEM.format(max_span=config.MAX_SPAN),
-        messages=[{"role": "user", "content": user}],
-        output_config={"effort": "medium", "format": {"type": "json_schema", "schema": SCHEMA}},
-    )
-    if response.stop_reason == "refusal":
-        raise PickError(f"Model declined the request: {response.stop_details}")
-    if response.stop_reason == "max_tokens":
-        raise PickError("Model output was truncated")
-    text = next(b.text for b in response.content if b.type == "text")
+    result = llm.complete_json(SYSTEM.format(max_span=config.MAX_SPAN), user, SCHEMA)
 
     picks = []
-    for raw in json.loads(text)["picks"][:3]:
-        p = by_id.get(raw["passage_id"])
-        start, end = raw["start"], raw["end"]
-        if not p or not (0 <= start <= end < len(p["sentences"])):
+    for raw in result.get("picks", [])[:3]:
+        p = by_id.get(raw.get("passage_id"))
+        start, end = raw.get("start"), raw.get("end")
+        if not p or not isinstance(start, int) or not isinstance(end, int) \
+                or not (0 <= start <= end < len(p["sentences"])):
             continue  # hallucinated id or out-of-range span
         end = min(end, start + config.MAX_SPAN - 1)
-        picks.append({"passage": p, "start": start, "end": end, "reason": raw["reason"]})
+        picks.append({"passage": p, "start": start, "end": end, "reason": raw.get("reason", "")})
     return picks

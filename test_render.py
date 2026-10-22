@@ -40,3 +40,10 @@ def test_sentence_split_roundtrip():
     assert len(sentences) == 2
     passage = dict(PASSAGE, text=text, sentences=sentences)
     assert render.quote_text(passage, 0, 1) == text
+
+
+def test_parse_json_tolerates_reasoning_and_fences():
+    import llm
+
+    out = '<think>{"not": "this"}</think>\n```json\n{"picks": [{"passage_id": 1, "start": 0, "end": 0, "reason": "x"}]}\n```'
+    assert llm.parse_json(out)["picks"][0]["passage_id"] == 1
