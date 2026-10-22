@@ -1,0 +1,19 @@
+# One entry per source file in texts/. Citation quality depends on these fields.
+# Required: id, author, title, file. Optional: year, type, translator, source_url.
+works:
+  - id: manifesto
+    author: Karl Marx and Friedrich Engels
+    title: Manifesto of the Communist Party
+    year: 1848
+    type: book
+    translator: Samuel Moore
+    source_url: https://www.marxists.org/archive/marx/works/1848/communist-manifesto/
+    file: manifesto.html
+
+  - id: state-and-revolution-ch1
+    author: Vladimir Lenin
+    title: The State and Revolution
+    year: 1917
+    type: book
+    source_url: https://www.marxists.org/archive/lenin/works/1917/staterev/ch01.htm
+    file: staterev-ch01.html
