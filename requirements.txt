@@ -11,3 +11,4 @@ ebooklib>=0.18
 pymupdf>=1.24.0
 pysbd>=0.3.4
 pyyaml>=6.0
+lxml>=5.0.0

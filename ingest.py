@@ -10,8 +10,13 @@ from config import config
 
 MIN_PARAGRAPH_CHARS = 40
 HEADINGS = ["h1", "h2", "h3", "h4", "h5"]
-# marxists.org metadata, navigation, and endnote blocks
-SKIP_CLASSES = {"information", "footer", "updat", "endnote", "toc", "link", "skip"}
+# marxists.org metadata, navigation, signatures, and endnote blocks
+SKIP_CLASSES = {
+    "information", "info", "footer", "updat", "endnote", "toc", "link", "skip", "title",
+    "sig", "date", "index", "next", "transcriber", "ednote",
+}
+# Inline editor insertions such as "[in 1848]", which are not the author's words
+EDITOR_CLASSES = {"inote", "enote", "anote"}
 
 _segmenter = pysbd.Segmenter(language="en", clean=False)
 
@@ -19,7 +24,9 @@ _segmenter = pysbd.Segmenter(language="en", clean=False)
 def normalize(text: str) -> str:
     text = text.replace("­", "")  # soft hyphen
     text = re.sub(r"\[\d+[a-z]?\]", "", text)  # footnote markers like [12]
+    text = re.sub(r"\[\s*\]", "", text)  # brackets left after removing footnote links
     text = re.sub(r"\s+", " ", text)
+    text = re.sub(r" +([,.;:!?)\]’”])", r"\1", text)  # gaps left by removed tags
     return text.strip()
 
 
@@ -30,8 +37,10 @@ def split_sentences(text: str) -> list[str]:
 # --- Parsers: each returns [(section_title, [paragraph_text])] ---
 
 def parse_html(html: str) -> list[tuple[str, list[str]]]:
-    soup = BeautifulSoup(html, "html.parser")
+    soup = BeautifulSoup(html, "lxml")
     for tag in soup(["script", "style", "sup"]):
+        tag.decompose()
+    for tag in soup.find_all(class_=lambda c: c in EDITOR_CLASSES):
         tag.decompose()
     for a in soup.find_all("a", href=re.compile(r"^#")):
         if re.fullmatch(r"\s*\[?\d+[a-z]?\]?\s*", a.get_text()):
@@ -46,7 +55,8 @@ def parse_html(html: str) -> list[tuple[str, list[str]]]:
         if not text:
             continue
         if el.name in HEADINGS:
-            sections.append((text, []))
+            if re.search(r"[A-Za-z0-9]", text):  # skip decorative headings like "* * *"
+                sections.append((text, []))
         else:
             sections[-1][1].append(text)
     return [s for s in sections if s[1]]
@@ -104,9 +114,11 @@ def load_works(path: str = None) -> list[dict]:
     with open(path or config.WORKS_FILE) as f:
         works = yaml.safe_load(f)["works"]
     for w in works:
-        missing = [k for k in ("id", "author", "title", "file") if not w.get(k)]
+        missing = [k for k in ("id", "author", "title") if not w.get(k)]
         if missing:
             raise ValueError(f"Work {w.get('id', '?')} is missing {', '.join(missing)}")
+        w.setdefault("file", f"{w['id']}.html")
+        w.setdefault("source_url", w.get("url"))
     return works
 
 

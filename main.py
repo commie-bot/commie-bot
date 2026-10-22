@@ -9,6 +9,7 @@ from rich.table import Table
 
 import db
 import embed as embedder
+import fetch as fetcher
 import ingest as ingester
 import picker
 import render
@@ -23,16 +24,48 @@ def cli():
     """Reply to Reddit posts with verbatim quotes from socialist writers."""
 
 
-@cli.command()
-@click.option("--work", "work_id", help="Ingest only this work id from works.yaml.")
-def ingest(work_id):
-    """Parse texts listed in works.yaml into the database."""
-    conn = db.connect()
+def _select_works(work_id):
     works = ingester.load_works()
     if work_id:
         works = [w for w in works if w["id"] == work_id]
         if not works:
             raise click.ClickException(f"No work with id {work_id} in {config.WORKS_FILE}")
+    return works
+
+
+@cli.command()
+@click.option("--work", "work_id", help="Download only this work id from works.yaml.")
+@click.option("--force", is_flag=True, help="Download again even if the file exists.")
+def fetch(work_id, force):
+    """Download works that have a url in works.yaml into texts/."""
+    os.makedirs(config.TEXTS_DIR, exist_ok=True)
+    for w in _select_works(work_id):
+        path = os.path.join(config.TEXTS_DIR, w["file"])
+        if not w.get("url"):
+            continue
+        if os.path.exists(path) and not force:
+            console.print(f"[dim]Have {w['id']}[/]")
+            continue
+        console.print(f"Fetching [bold]{w['id']}[/] from {w['url']}")
+        try:
+            fetcher.fetch_work(w, config.TEXTS_DIR, log=lambda m: console.print(f"[dim]{m}[/]"))
+        except Exception as e:
+            console.print(f"[red]Failed {w['id']}: {e}[/]")
+
+
+@cli.command()
+@click.option("--work", "work_id", help="Ingest only this work id from works.yaml.")
+def ingest(work_id):
+    """Parse texts listed in works.yaml into the database."""
+    conn = db.connect()
+    works = _select_works(work_id)
+    if not work_id:
+        keep = {w["id"] for w in works}
+        for (old,) in conn.execute("SELECT id FROM works").fetchall():
+            if old not in keep:
+                db.delete_work(conn, old)
+                console.print(f"[dim]Removed {old} (no longer in works.yaml)[/]")
+        conn.commit()
 
     table = Table("id", "sections", "paragraphs", "sentences")
     for w in works:

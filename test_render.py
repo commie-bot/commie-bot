@@ -47,3 +47,16 @@ def test_parse_json_tolerates_reasoning_and_fences():
 
     out = '<think>{"not": "this"}</think>\n```json\n{"picks": [{"passage_id": 1, "start": 0, "end": 0, "reason": "x"}]}\n```'
     assert llm.parse_json(out)["picks"][0]["passage_id"] == 1
+
+
+def test_chapter_links_stay_in_work_and_skip_guides():
+    from bs4 import BeautifulSoup
+
+    import fetch
+
+    index = "https://example.org/works/1848/manifesto/index.htm"
+    html = """<a href="ch01.htm">I</a><a href="ch01.htm#s2">I again</a><a href="guide.htm">Guide</a>
+              <a href="../../index.htm">Up</a><a href="ch02.htm">II</a><a href="cover.jpg">img</a>"""
+    links = fetch.chapter_links(index, BeautifulSoup(html, "html.parser"))
+    assert links == ["https://example.org/works/1848/manifesto/ch01.htm",
+                     "https://example.org/works/1848/manifesto/ch02.htm"]

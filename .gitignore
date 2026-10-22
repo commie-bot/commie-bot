@@ -3,3 +3,5 @@ texts/
 *.db
 __pycache__/
 .venv/
+fetch.log
+embed.log

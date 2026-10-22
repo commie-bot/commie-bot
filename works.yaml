@@ -1,19 +1,335 @@
-# One entry per source file in texts/. Citation quality depends on these fields.
-# Required: id, author, title, file. Optional: year, type, translator, source_url.
+# One entry per work. Citation quality depends on these fields.
+#
+# Required: id, author, title.
+# Optional:
+#   url         Page to download with `python main.py fetch`. An index page
+#               (index.htm) is crawled for chapters in the same directory.
+#   crawl       true or false, to override the index.htm rule.
+#   skip        Substrings of linked file names to leave out of the crawl.
+#               Study guides and glossaries are always left out.
+#   file        File name in texts/. Defaults to <id>.html.
+#   source_url  Link shown in the citation. Defaults to url.
+#   year, type (book, pamphlet, speech, article, letter), translator.
+#
+# To add a work you already have as a file, leave out url and set file.
+
 works:
-  - id: manifesto
+  # Karl Marx and Friedrich Engels
+  - id: communist-manifesto
     author: Karl Marx and Friedrich Engels
     title: Manifesto of the Communist Party
     year: 1848
-    type: book
+    type: pamphlet
     translator: Samuel Moore
-    source_url: https://www.marxists.org/archive/marx/works/1848/communist-manifesto/
-    file: manifesto.html
+    url: https://www.marxists.org/archive/marx/works/1848/communist-manifesto/index.htm
 
-  - id: state-and-revolution-ch1
+  - id: german-ideology
+    author: Karl Marx and Friedrich Engels
+    title: The German Ideology
+    year: 1845
+    type: book
+    url: https://www.marxists.org/archive/marx/works/1845/german-ideology/index.htm
+
+  - id: theses-on-feuerbach
+    author: Karl Marx
+    title: Theses on Feuerbach
+    year: 1845
+    type: article
+    url: https://www.marxists.org/archive/marx/works/1845/theses/theses.htm
+
+  - id: critique-hegel-intro
+    author: Karl Marx
+    title: A Contribution to the Critique of Hegel's Philosophy of Right, Introduction
+    year: 1843
+    type: article
+    url: https://www.marxists.org/archive/marx/works/1843/critique-hpr/intro.htm
+
+  - id: manuscripts-1844
+    author: Karl Marx
+    title: Economic and Philosophic Manuscripts of 1844
+    year: 1844
+    type: book
+    url: https://www.marxists.org/archive/marx/works/1844/manuscripts/preface.htm
+    crawl: true
+
+  - id: wage-labour-capital
+    author: Karl Marx
+    title: Wage Labour and Capital
+    year: 1847
+    type: pamphlet
+    url: https://www.marxists.org/archive/marx/works/1847/wage-labour/index.htm
+
+  - id: eighteenth-brumaire
+    author: Karl Marx
+    title: The Eighteenth Brumaire of Louis Bonaparte
+    year: 1852
+    type: book
+    url: https://www.marxists.org/archive/marx/works/1852/18th-brumaire/index.htm
+
+  - id: value-price-profit
+    author: Karl Marx
+    title: Value, Price and Profit
+    year: 1865
+    type: speech
+    url: https://www.marxists.org/archive/marx/works/1865/value-price-profit/index.htm
+
+  - id: capital-v1
+    author: Karl Marx
+    title: Capital, Volume I
+    year: 1867
+    type: book
+    url: https://www.marxists.org/archive/marx/works/1867-c1/index.htm
+
+  - id: civil-war-france
+    author: Karl Marx
+    title: The Civil War in France
+    year: 1871
+    type: pamphlet
+    url: https://www.marxists.org/archive/marx/works/1871/civil-war-france/index.htm
+
+  - id: gotha-critique
+    author: Karl Marx
+    title: Critique of the Gotha Programme
+    year: 1875
+    type: pamphlet
+    url: https://www.marxists.org/archive/marx/works/1875/gotha/index.htm
+
+  - id: condition-working-class
+    author: Friedrich Engels
+    title: The Condition of the Working Class in England
+    year: 1845
+    type: book
+    url: https://www.marxists.org/archive/marx/works/1845/condition-working-class/index.htm
+
+  - id: principles-of-communism
+    author: Friedrich Engels
+    title: The Principles of Communism
+    year: 1847
+    type: pamphlet
+    url: https://www.marxists.org/archive/marx/works/1847/11/prin-com.htm
+
+  - id: socialism-utopian-scientific
+    author: Friedrich Engels
+    title: "Socialism: Utopian and Scientific"
+    year: 1880
+    type: pamphlet
+    url: https://www.marxists.org/archive/marx/works/1880/soc-utop/index.htm
+
+  - id: origin-of-the-family
+    author: Friedrich Engels
+    title: The Origin of the Family, Private Property and the State
+    year: 1884
+    type: book
+    url: https://www.marxists.org/archive/marx/works/1884/origin-family/index.htm
+
+  # Vladimir Lenin
+  - id: what-is-to-be-done
+    author: Vladimir Lenin
+    title: What Is to Be Done?
+    year: 1902
+    type: book
+    url: https://www.marxists.org/archive/lenin/works/1901/witbd/index.htm
+
+  - id: three-sources
+    author: Vladimir Lenin
+    title: The Three Sources and Three Component Parts of Marxism
+    year: 1913
+    type: article
+    url: https://www.marxists.org/archive/lenin/works/1913/mar/x01.htm
+
+  - id: imperialism
+    author: Vladimir Lenin
+    title: "Imperialism, the Highest Stage of Capitalism"
+    year: 1916
+    type: book
+    url: https://www.marxists.org/archive/lenin/works/1916/imp-hsc/index.htm
+
+  - id: april-theses
+    author: Vladimir Lenin
+    title: The Tasks of the Proletariat in the Present Revolution (April Theses)
+    year: 1917
+    type: article
+    url: https://www.marxists.org/archive/lenin/works/1917/apr/04.htm
+
+  - id: state-and-revolution
     author: Vladimir Lenin
     title: The State and Revolution
     year: 1917
     type: book
-    source_url: https://www.marxists.org/archive/lenin/works/1917/staterev/ch01.htm
-    file: staterev-ch01.html
+    url: https://www.marxists.org/archive/lenin/works/1917/staterev/index.htm
+
+  - id: renegade-kautsky
+    author: Vladimir Lenin
+    title: The Proletarian Revolution and the Renegade Kautsky
+    year: 1918
+    type: book
+    url: https://www.marxists.org/archive/lenin/works/1918/prrk/index.htm
+
+  - id: left-wing-communism
+    author: Vladimir Lenin
+    title: "\"Left-Wing\" Communism: An Infantile Disorder"
+    year: 1920
+    type: book
+    url: https://www.marxists.org/archive/lenin/works/1920/lwc/index.htm
+
+  # Joseph Stalin
+  - id: national-question
+    author: Joseph Stalin
+    title: Marxism and the National Question
+    year: 1913
+    type: pamphlet
+    url: https://www.marxists.org/reference/archive/stalin/works/1913/03.htm
+    crawl: true
+
+  - id: foundations-of-leninism
+    author: Joseph Stalin
+    title: The Foundations of Leninism
+    year: 1924
+    type: book
+    url: https://www.marxists.org/reference/archive/stalin/works/1924/foundations-leninism/index.htm
+
+  - id: dialectical-historical-materialism
+    author: Joseph Stalin
+    title: Dialectical and Historical Materialism
+    year: 1938
+    type: pamphlet
+    url: https://www.marxists.org/reference/archive/stalin/works/1938/09.htm
+
+  # Rosa Luxemburg
+  - id: reform-or-revolution
+    author: Rosa Luxemburg
+    title: Reform or Revolution
+    year: 1900
+    type: pamphlet
+    url: https://www.marxists.org/archive/luxemburg/1900/reform-revolution/index.htm
+
+  - id: mass-strike
+    author: Rosa Luxemburg
+    title: The Mass Strike, the Political Party and the Trade Unions
+    year: 1906
+    type: pamphlet
+    url: https://www.marxists.org/archive/luxemburg/1906/mass-strike/index.htm
+
+  - id: junius-pamphlet
+    author: Rosa Luxemburg
+    title: The Junius Pamphlet
+    year: 1915
+    type: pamphlet
+    url: https://www.marxists.org/archive/luxemburg/1915/junius/index.htm
+
+  - id: russian-revolution-luxemburg
+    author: Rosa Luxemburg
+    title: The Russian Revolution
+    year: 1918
+    type: pamphlet
+    url: https://www.marxists.org/archive/luxemburg/1918/russian-revolution/index.htm
+
+  - id: order-prevails-in-berlin
+    author: Rosa Luxemburg
+    title: Order Prevails in Berlin
+    year: 1919
+    type: article
+    url: https://www.marxists.org/archive/luxemburg/1919/01/14.htm
+
+  # Mao Zedong
+  - id: on-practice
+    author: Mao Zedong
+    title: On Practice
+    year: 1937
+    type: article
+    url: https://www.marxists.org/reference/archive/mao/selected-works/volume-1/mswv1_16.htm
+
+  - id: on-contradiction
+    author: Mao Zedong
+    title: On Contradiction
+    year: 1937
+    type: article
+    url: https://www.marxists.org/reference/archive/mao/selected-works/volume-1/mswv1_17.htm
+
+  - id: combat-liberalism
+    author: Mao Zedong
+    title: Combat Liberalism
+    year: 1937
+    type: article
+    url: https://www.marxists.org/reference/archive/mao/selected-works/volume-2/mswv2_03.htm
+
+  - id: serve-the-people
+    author: Mao Zedong
+    title: Serve the People
+    year: 1944
+    type: speech
+    url: https://www.marxists.org/reference/archive/mao/selected-works/volume-3/mswv3_19.htm
+
+  - id: oppose-book-worship
+    author: Mao Zedong
+    title: Oppose Book Worship
+    year: 1930
+    type: article
+    url: https://www.marxists.org/reference/archive/mao/selected-works/volume-6/mswv6_11.htm
+
+  - id: little-red-book
+    author: Mao Zedong
+    title: Quotations from Chairman Mao Tse-tung
+    year: 1964
+    type: book
+    url: https://www.marxists.org/reference/archive/mao/works/red-book/index.htm
+
+  # Ho Chi Minh
+  - id: vietnam-declaration-of-independence
+    author: Ho Chi Minh
+    title: Declaration of Independence of the Democratic Republic of Viet Nam
+    year: 1945
+    type: speech
+    url: https://www.marxists.org/reference/archive/ho-chi-minh/works/1945/declaration-independence.htm
+
+  # Fidel Castro
+  - id: history-will-absolve-me
+    author: Fidel Castro
+    title: History Will Absolve Me
+    year: 1953
+    type: speech
+    url: https://www.marxists.org/history/cuba/archive/castro/1953/10/16.htm
+
+  - id: castro-un-1960
+    author: Fidel Castro
+    title: "To the U.N. General Assembly: Cuba's Revolutionary Policy"
+    year: 1960
+    type: speech
+    url: https://www.marxists.org/history/cuba/archive/castro/1960/09/26.htm
+
+  - id: castro-may-day-1961
+    author: Fidel Castro
+    title: "May Day Celebration: Cuba is a Socialist Nation"
+    year: 1961
+    type: speech
+    url: https://www.marxists.org/history/cuba/archive/castro/1961/05/01.htm
+
+  - id: castro-marxism-leninism
+    author: Fidel Castro
+    title: Speech on Marxism-Leninism
+    year: 1961
+    type: speech
+    url: https://www.marxists.org/history/cuba/archive/castro/1961/12/02.htm
+
+  # Che Guevara
+  - id: socialism-and-man
+    author: Che Guevara
+    title: Socialism and Man in Cuba
+    year: 1965
+    type: article
+    url: https://www.marxists.org/archive/guevara/1965/03/man-socialism.htm
+
+  - id: message-to-tricontinental
+    author: Che Guevara
+    title: Message to the Tricontinental
+    year: 1967
+    type: article
+    url: https://www.marxists.org/archive/guevara/1967/04/16.htm
+
+  # Eugene V. Debs
+  - id: debs-statement-to-court
+    author: Eugene V. Debs
+    title: Statement to the Court
+    year: 1918
+    type: speech
+    url: https://www.marxists.org/archive/debs/works/1918/court.htm

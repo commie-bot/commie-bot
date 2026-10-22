@@ -49,11 +49,22 @@ To add another provider, write a function in `llm.py` that takes a system prompt
    ssh -N -L 11434:127.0.0.1:11434 user@your-server
    ```
 
-3. Put source files in `texts/` and add one entry per file to `works.yaml`. Supported formats: HTML (marxists.org pages work best), EPUB, PDF, and TXT.
+3. Download the starter corpus. `works.yaml` lists about 45 public works by Marx, Engels, Lenin, Stalin, Luxemburg, Mao, Ho Chi Minh, Castro, Guevara, and Debs, all from the [Marxists Internet Archive](https://www.marxists.org/):
+
+   ```bash
+   python main.py fetch
+   ```
+
+   The fetcher sends one request per second. For multi-page works, it follows the chapter links on the index page and saves each work as one UTF-8 HTML file in `texts/`.
+
+   To add a work, add an entry to `works.yaml`. Use `url` to download it, or put your own file in `texts/` and set `file`. Supported formats: HTML, EPUB, PDF, and TXT.
+
+Texts aren't included in this repo. Check each source's terms before you redistribute them.
 
 ## Usage
 
 ```bash
+python main.py fetch                  # download works that have a url
 python main.py ingest                 # parse all works (re-running replaces them)
 python main.py ingest --work manifesto
 python main.py embed                  # embed new paragraphs
