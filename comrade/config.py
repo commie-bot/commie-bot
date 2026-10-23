@@ -38,7 +38,8 @@ class Config:
     # Retrieval
     CANDIDATES: int = int(os.getenv("COMRADE_CANDIDATES", "30"))
     REPEAT_DAYS: int = int(os.getenv("COMRADE_REPEAT_DAYS", "30"))
-    MAX_SPAN: int = 4  # max sentences per quote
+    MAX_SPAN: int = 3  # max sentences per quote
+    MAX_QUOTE_CHARS: int = int(os.getenv("COMRADE_MAX_QUOTE_CHARS", "300"))
 
 
 config = Config()

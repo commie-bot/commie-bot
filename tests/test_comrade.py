@@ -129,3 +129,16 @@ def test_fbis_wire_report_is_rejected():
     assert castro_db.is_report(["Havana--Premier Fidel Castro delivered the final speech today."])
     summary = FBIS_PAGE.replace("(Text) Comrade", "(Editorial report) Comrade")
     assert castro_db.parse_doc(summary)["paragraphs"] == []
+
+
+def test_long_picks_are_trimmed_or_dropped(monkeypatch):
+    from comrade import llm, picker
+
+    short, long_ = "Workers of the world, unite!", "word " * 80
+    sentences = [short, short, long_]
+    passage = dict(PASSAGE, id=7, text=" ".join(sentences), sentences=sentences)
+    picks = {"picks": [{"passage_id": 7, "start": 0, "end": 2, "reason": ""},
+                       {"passage_id": 7, "start": 2, "end": 2, "reason": ""}]}
+    monkeypatch.setattr(llm, "complete_json", lambda *a: picks)
+    result = picker.pick("target", [passage])
+    assert [(p["start"], p["end"]) for p in result] == [(0, 1)]
