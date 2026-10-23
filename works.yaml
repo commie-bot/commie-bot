@@ -1011,7 +1011,7 @@ works:
 
   - id: malcolm-x-ballot-or-the-bullet
     author: Malcolm X
-    title: "The Ballot or the Bullet"
+    title: "The Ballot or the Bullet (Detroit)"  # the April 12 version, not Cleveland
     year: 1964
     type: speech
     file: malcolm-x/ballot-or-the-bullet.txt  # transcribed with transcribe.py
