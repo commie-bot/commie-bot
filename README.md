@@ -49,7 +49,7 @@ To add another provider, write a function in `llm.py` that takes a system prompt
    ssh -N -L 11434:127.0.0.1:11434 user@your-server
    ```
 
-3. Download the starter corpus. `works.yaml` lists about 120 public works by Marx, Engels, Lenin, Stalin, Luxemburg, Mao, Ho Chi Minh, Castro, Guevara, Parenti, Malcolm X, and Debs, all from the [Marxists Internet Archive](https://www.marxists.org/):
+3. Download the starter corpus. `works.yaml` lists about 185 public works by Marx, Engels, Lenin, Stalin, Luxemburg, Mao, Ho Chi Minh, Castro, Guevara, Sankara, Hampton, Parenti, Malcolm X, Debs, Kollontai, Zetkin, Nkrumah, Cabral, and others, all from the [Marxists Internet Archive](https://www.marxists.org/):
 
    ```bash
    python main.py fetch
@@ -112,6 +112,8 @@ python main.py reply <reddit-url> --author lenin
 ```
 
 `search` works without embeddings; it falls back to keyword search and prints a warning.
+
+To test retrieval in a browser, run `python main.py serve` and open `http://127.0.0.1:8765`. Paste text, then click **Search** to see ranked passages, or **Pick quotes with the LLM** to see the quotes the bot would post. The page listens only on your computer.
 
 ## Reply format
 

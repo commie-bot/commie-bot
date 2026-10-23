@@ -159,6 +159,15 @@ def reply(url, author, dry_run):
     console.print(f"[green]Posted:[/] {permalink}")
 
 
+@cli.command()
+@click.option("--port", default=8765, show_default=True)
+def serve(port):
+    """Open a local test page: paste text, see ranked passages and quote picks."""
+    import web
+
+    web.serve(port=port)
+
+
 def _search(conn, text, author, k=None):
     results = searcher.search(conn, text, k=k, author=author,
                                warn=lambda m: console.print(f"[yellow]{m}[/]"))
