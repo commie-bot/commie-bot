@@ -57,7 +57,7 @@ To add another provider, write a function in `llm.py` that takes a system prompt
 
    The fetcher sends one request per second. For multi-page works, it follows the chapter links on the index page and saves each work as one UTF-8 HTML file in `texts/`.
 
-4. Optional: download about 1,000 more Castro speeches from the [Castro Speech Database](https://web.archive.org/web/2019/http://lanic.utexas.edu/la/cb/cuba/castro.html), 1959 to 1996. The translations are by the U.S. Foreign Broadcast Information Service (FBIS). The command reads the Internet Archive's copy, so a full run takes a few hours. It saves progress after each speech, so you can stop and restart it.
+4. Optional: download about 580 more Castro speeches from the [Castro Speech Database](https://web.archive.org/web/2019/http://lanic.utexas.edu/la/cb/cuba/castro.html), 1959 to 1996. The translations are by the U.S. Foreign Broadcast Information Service (FBIS). The command reads the Internet Archive's copy, so a full run takes a few hours. It saves progress after each speech, so you can stop and restart it.
 
    ```bash
    python main.py fetch-castro              # all years
@@ -75,6 +75,16 @@ To add another provider, write a function in `llm.py` that takes a system prompt
    Name each MP3 file after the `file` entry in `works.yaml`, such as `ballot-or-the-bullet.mp3`. Machine transcripts can contain errors, so check a quote against the recording before you post it.
 
    To add a work, add an entry to `works.yaml`. Use `url` to download it, or put your own file in `texts/` and set `file`. Supported formats: HTML, EPUB, PDF, and TXT.
+
+   For your own copies of books, use `library.yaml` instead. Git ignores it, and an entry with the same `id` as a `works.yaml` entry replaces that entry. Books often contain text by other writers, such as introductions, editor's notes, and endnotes. Ingest leaves out common book matter by section title. For anything else, set these fields:
+
+   - `skip_sections`: section titles to leave out, as regular expressions matched against the whole title.
+   - `only_sections`: the only sections to keep, for books that collect several authors.
+   - `pages`: the first and last PDF page to read.
+
+   To see a book's section titles, run `python -c "import ingest; print([t for t, _ in ingest.parse_file('texts/library/book.epub')])"`.
+
+   Ingest also leaves out block quotes and epigraphs, because they quote other writers.
 
 Texts aren't included in this repo. Check each source's terms before you redistribute them.
 
