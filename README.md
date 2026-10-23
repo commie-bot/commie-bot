@@ -28,7 +28,7 @@ Set `LLM_PROVIDER`, `LLM_API_KEY`, and optionally `LLM_MODEL` and `LLM_BASE_URL`
 | Local Ollama | `openai` | `qwen3:8b` | `http://localhost:11434/v1` |
 | OpenRouter | `openai` | any model ID | `https://openrouter.ai/api/v1` |
 
-To add another provider, write a function in `llm.py` that takes a system prompt, a user prompt, and a JSON schema and returns a dict. Then register it in `PROVIDERS`.
+To add another provider, write a function in `comrade/llm.py` that takes a system prompt, a user prompt, and a JSON schema and returns a dict. Then register it in `PROVIDERS`.
 
 ## Setup
 
@@ -51,13 +51,13 @@ To add another provider, write a function in `llm.py` that takes a system prompt
    ssh -N -L 11434:127.0.0.1:11434 user@your-server
    ```
 
-3. Download the starter corpus. `works.yaml` lists about 185 public works by Marx, Engels, Lenin, Stalin, Luxemburg, Mao, Ho Chi Minh, Castro, Guevara, Sankara, Hampton, Parenti, Malcolm X, Debs, Kollontai, Zetkin, Nkrumah, Cabral, and others, all from the [Marxists Internet Archive](https://www.marxists.org/):
+3. Download the starter corpus. `catalog/marxists.yaml` lists about 185 public works by Marx, Engels, Lenin, Stalin, Luxemburg, Mao, Ho Chi Minh, Castro, Guevara, Sankara, Hampton, Parenti, Malcolm X, Debs, Kollontai, Zetkin, Nkrumah, Cabral, and others, all from the [Marxists Internet Archive](https://www.marxists.org/):
 
    ```bash
    python main.py fetch
    ```
 
-   The fetcher sends one request per second. For multi-page works, it follows the chapter links on the index page and saves each work as one UTF-8 HTML file in `texts/`.
+   The fetcher sends one request per second. For multi-page works, it follows the chapter links on the index page and saves each work as one UTF-8 HTML file in `texts/fetched/<author>/`.
 
 4. Optional: download about 580 more Castro speeches from the [Castro Speech Database](https://web.archive.org/web/2019/http://lanic.utexas.edu/la/cb/cuba/castro.html), 1959 to 1996. The translations are by the U.S. Foreign Broadcast Information Service (FBIS). The command reads the Internet Archive's copy, so a full run takes a few hours. It saves progress after each speech, so you can stop and restart it.
 
@@ -66,27 +66,27 @@ To add another provider, write a function in `llm.py` that takes a system prompt
    python main.py fetch-castro --year 1962  # one year
    ```
 
-   The command keeps only documents that FBIS marks as speeches. It drops wire reports and editorial summaries, which paraphrase Castro, and speeches that `works.yaml` already has from marxists.org. It also removes FBIS insertions such as "(applause)". The results go to `castro-db.yaml`, which `works.yaml` includes.
+   The command keeps only documents that FBIS marks as speeches. It drops wire reports and editorial summaries, which paraphrase Castro, and speeches that `catalog/marxists.yaml` already has. It also removes FBIS insertions such as "(applause)". The results go to `catalog/castro-fbis.yaml`.
 
-   The FBIS translations are U.S. government works in the public domain, so the repo already includes them in `texts/public/castro-db/`. You need this command only to download them again.
+   The FBIS translations are U.S. government works in the public domain, so the repo already includes them in `texts/public/castro/fbis/`. You need this command only to download them again.
 
-5. Optional: transcribe the Malcolm X recordings from the [Marxists Internet Archive](https://www.marxists.org/reference/archive/malcolm-x/index.htm). `transcribe.py` runs [faster-whisper](https://github.com/SYSTRAN/faster-whisper) and needs a CUDA GPU. Download the MP3 files, then run:
+5. Optional: transcribe the Malcolm X recordings from the [Marxists Internet Archive](https://www.marxists.org/reference/archive/malcolm-x/index.htm). `comrade/sources/transcribe.py` runs [faster-whisper](https://github.com/SYSTRAN/faster-whisper) and needs a CUDA GPU. Download the MP3 files, then run:
 
    ```bash
-   python transcribe.py *.mp3 --out texts/malcolm-x
+   python -m comrade.sources.transcribe *.mp3 --out texts/private/malcolm-x/transcripts
    ```
 
-   Name each MP3 file after the `file` entry in `works.yaml`, such as `ballot-or-the-bullet.mp3`. Machine transcripts can contain errors, so check a quote against the recording before you post it.
+   Name each MP3 file after the `file` entry in `catalog/marxists.yaml`, such as `ballot-or-the-bullet.mp3`. Machine transcripts can contain errors, so check a quote against the recording before you post it.
 
-   To add a work, add an entry to `works.yaml`. Use `url` to download it, or put your own file in `texts/` and set `file`. Supported formats: HTML, EPUB, PDF, and TXT.
+   To add a work, add an entry to `catalog/marxists.yaml`. Use `url` to download it, or put your own file in `texts/` and set `file` to its path there. Supported formats: HTML, EPUB, PDF, and TXT.
 
-   For your own copies of books, use `library.yaml` instead. Git ignores it, and an entry with the same `id` as a `works.yaml` entry replaces that entry. Books often contain text by other writers, such as introductions, editor's notes, and endnotes. Ingest leaves out common book matter by section title. For anything else, set these fields:
+   For your own copies of books, put the files in `texts/private/<author>/` and list them in `catalog/private.yaml`. Git ignores both, and an entry with the same `id` as a `marxists.yaml` entry replaces that entry. Books often contain text by other writers, such as introductions, editor's notes, and endnotes. Ingest leaves out common book matter by section title. For anything else, set these fields:
 
    - `skip_sections`: section titles to leave out, as regular expressions matched against the whole title.
    - `only_sections`: the only sections to keep, for books that collect several authors.
    - `pages`: the first and last PDF page to read.
 
-   To see a book's section titles, run `python -c "import ingest; print([t for t, _ in ingest.parse_file('texts/library/book.epub')])"`.
+   To see a book's section titles, run `python -c "from comrade import ingest; print([t for t, _ in ingest.parse_file('texts/private/author/book.epub')])"`.
 
    Ingest also leaves out block quotes and epigraphs, because they quote other writers.
 
@@ -95,10 +95,12 @@ To add another provider, write a function in `llm.py` that takes a system prompt
 | Folder | In git | Contents |
 | --- | --- | --- |
 | `texts/public/` | Yes | Public domain texts only, such as the FBIS Castro speeches. |
-| `texts/library/` | No | Your own copies of books, listed in `library.yaml`. |
-| `texts/` (everything else) | No | Works that `fetch` downloads from marxists.org. Their licenses vary, so the repo doesn't redistribute them. |
+| `texts/fetched/` | No | Works that `fetch` downloads from marxists.org. Their licenses vary, so the repo doesn't redistribute them. |
+| `texts/private/` | No | Your own books and transcripts, listed in `catalog/private.yaml`. |
 
-Add a text to `texts/public/` only if it's in the public domain. Never commit `texts/library/` or `library.yaml`.
+Each folder has one subfolder per author, such as `texts/fetched/lenin/`.
+
+Add a text to `texts/public/` only if it's in the public domain. Never commit `texts/private/` or `catalog/private.yaml`.
 
 ## Usage
 
@@ -127,7 +129,19 @@ To test retrieval in a browser, run `python main.py serve` and open `http://127.
 ^(I am a bot. Quotes are verbatim from the cited source.)
 ```
 
-The work title links to `source_url` when `works.yaml` sets it. The section is omitted when it's empty or matches the title.
+The work title links to `source_url` when the catalog sets it. The section is omitted when it's empty or matches the title.
+
+## Layout
+
+```
+main.py             CLI
+comrade/            retrieval, quote picking, rendering, Reddit, the test page
+  sources/          downloaders (marxists.org, Castro FBIS) and the transcriber
+catalog/            work lists: marxists.yaml, castro-fbis.yaml, private.yaml
+texts/              source files: public/, fetched/, private/
+data/               the database and logs (not committed)
+tests/
+```
 
 ## Tests
 

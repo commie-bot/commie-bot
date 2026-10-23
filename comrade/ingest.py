@@ -6,7 +6,7 @@ import pysbd
 import yaml
 from bs4 import BeautifulSoup
 
-from config import config
+from comrade.config import config
 
 MIN_PARAGRAPH_CHARS = 40
 HEADINGS = ["h1", "h2", "h3", "h4", "h5"]
@@ -177,23 +177,34 @@ def parse_file(path: str, pages=None) -> list[tuple[str, list[str]]]:
     raise ValueError(f"Unsupported file type: {path}")
 
 
-def load_works(path: str = None) -> list[dict]:
-    """Load works.yaml plus any files in its include list that exist (such as castro-db.yaml)."""
-    path = path or config.WORKS_FILE
-    with open(path) as f:
-        data = yaml.safe_load(f)
-    works = data["works"]
-    for name in data.get("include", []):
-        extra = os.path.join(os.path.dirname(path), name)
-        if os.path.exists(extra):
-            with open(extra) as f:
+# Folder names for authors whose family name isn't the last word of their name
+AUTHOR_DIRS = {"Mao Zedong": "mao", "Ho Chi Minh": "ho-chi-minh", "Malcolm X": "malcolm-x", "Võ Nguyên Giáp": "giap"}
+
+
+def author_dir(author: str) -> str:
+    """The texts/ folder for an author: the family name, or the first author's for joint works."""
+    import unicodedata
+
+    first = author.split(" and ")[0].strip()
+    name = AUTHOR_DIRS.get(first) or first.split()[-1]
+    return unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode().lower()
+
+
+def load_works(catalog_dir: str = None) -> list[dict]:
+    """Load the catalog files that exist, in config.CATALOG_FILES order."""
+    catalog_dir = catalog_dir or config.CATALOG_DIR
+    works = []
+    for name in config.CATALOG_FILES:
+        path = os.path.join(catalog_dir, name)
+        if os.path.exists(path):
+            with open(path) as f:
                 works += (yaml.safe_load(f) or {}).get("works", [])
     works = list({w["id"]: w for w in works}.values())  # a later entry with the same id wins
     for w in works:
         missing = [k for k in ("id", "author", "title") if not w.get(k)]
         if missing:
             raise ValueError(f"Work {w.get('id', '?')} is missing {', '.join(missing)}")
-        w.setdefault("file", f"{w['id']}.html")
+        w.setdefault("file", f"fetched/{author_dir(w['author'])}/{w['id']}.html")
         w.setdefault("source_url", w.get("url"))
     return works
 

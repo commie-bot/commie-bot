@@ -3,9 +3,9 @@ import re
 
 import requests
 
-import db
-import embed
-from config import config
+from comrade import db
+from comrade import embed
+from comrade.config import config
 
 RRF_K = 60
 POOL = 200  # results pulled from each retriever before fusion and filtering

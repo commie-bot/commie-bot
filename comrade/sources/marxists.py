@@ -79,6 +79,7 @@ def fetch_work(work: dict, texts_dir: str, log=print) -> str:
 
     sections = "\n".join(f"<section>\n{body_html(p)}\n</section>" for p in pages)
     out = os.path.join(texts_dir, work["file"])
+    os.makedirs(os.path.dirname(out), exist_ok=True)
     with open(out, "w", encoding="utf-8") as f:
         f.write(f'<!doctype html>\n<html><head><meta charset="utf-8"><title>{work["title"]}</title></head>\n'
                 f"<body>\n{sections}\n</body></html>\n")

@@ -7,15 +7,14 @@
 #   crawl       true or false, to override the index.htm rule.
 #   skip        Substrings of linked file names to leave out of the crawl.
 #               Study guides and glossaries are always left out.
-#   file        File name in texts/. Defaults to <id>.html.
+#   file        Path in texts/. Defaults to fetched/<author>/<id>.html.
 #   source_url  Link shown in the citation. Defaults to url.
 #   year, type (book, pamphlet, speech, article, letter), translator.
 #
 # To add a work you already have as a file, leave out url and set file.
 
-include:
-  - castro-db.yaml  # written by `python main.py fetch-castro`
-  - library.yaml    # your own copies of books, not committed
+# The loader also reads castro-fbis.yaml (written by `python main.py fetch-castro`)
+# and private.yaml (your own books, not committed), in that order.
 
 works:
   # Karl Marx and Friedrich Engels
@@ -1014,56 +1013,56 @@ works:
     title: "The Ballot or the Bullet (Detroit)"  # the April 12 version, not Cleveland
     year: 1964
     type: speech
-    file: malcolm-x/ballot-or-the-bullet.txt  # transcribed with transcribe.py
+    file: private/malcolm-x/transcripts/ballot-or-the-bullet.txt  # transcribed with transcribe.py
     source_url: https://www.marxists.org/reference/archive/malcolm-x/1964/04/12.mp3
 
   - id: malcolm-x-the-dixicrats
     author: Malcolm X
     title: "The Democrats Are Dixiecrats"
     type: speech
-    file: malcolm-x/the-dixicrats.txt  # transcribed with transcribe.py
+    file: private/malcolm-x/transcripts/the-dixicrats.txt  # transcribed with transcribe.py
     source_url: https://www.marxists.org/reference/archive/malcolm-x/the-dixicrats.mp3
 
   - id: malcolm-x-racist-in-reverse
     author: Malcolm X
     title: "Racist in Reverse?"
     type: speech
-    file: malcolm-x/racist-in-reverse.txt  # transcribed with transcribe.py
+    file: private/malcolm-x/transcripts/racist-in-reverse.txt  # transcribed with transcribe.py
     source_url: https://www.marxists.org/reference/archive/malcolm-x/racist-in-reverse.mp3
 
   - id: malcolm-x-we-have-no-freedom
     author: Malcolm X
     title: "We Have No Freedom"
     type: speech
-    file: malcolm-x/we-have-no-freedom.txt  # transcribed with transcribe.py
+    file: private/malcolm-x/transcripts/we-have-no-freedom.txt  # transcribed with transcribe.py
     source_url: https://www.marxists.org/reference/archive/malcolm-x/we-have-no-freedom.mp3
 
   - id: malcolm-x-whites-disease
     author: Malcolm X
     title: "White Society's Disease"
     type: speech
-    file: malcolm-x/whites-disease.txt  # transcribed with transcribe.py
+    file: private/malcolm-x/transcripts/whites-disease.txt  # transcribed with transcribe.py
     source_url: https://www.marxists.org/reference/archive/malcolm-x/whites-disease.mp3
 
   - id: malcolm-x-revolution-bloodshed
     author: Malcolm X
     title: "Revolution and Bloodshed"
     type: speech
-    file: malcolm-x/revolution-bloodshed.txt  # transcribed with transcribe.py
+    file: private/malcolm-x/transcripts/revolution-bloodshed.txt  # transcribed with transcribe.py
     source_url: https://www.marxists.org/reference/archive/malcolm-x/revolution-bloodshed.mp3
 
   - id: malcolm-x-end-police-brutality
     author: Malcolm X
     title: "End Police Brutality"
     type: speech
-    file: malcolm-x/end-police-brutality.txt  # transcribed with transcribe.py
+    file: private/malcolm-x/transcripts/end-police-brutality.txt  # transcribed with transcribe.py
     source_url: https://www.marxists.org/reference/archive/malcolm-x/end-police-brutality.mp3
 
   - id: malcolm-x-dont-sit-in-stand-up
     author: Malcolm X
     title: "Don't Sit In, Stand Up"
     type: speech
-    file: malcolm-x/dont-sit-in-stand-up.txt  # transcribed with transcribe.py
+    file: private/malcolm-x/transcripts/dont-sit-in-stand-up.txt  # transcribed with transcribe.py
     source_url: https://www.marxists.org/reference/archive/malcolm-x/dont-sit-in-stand-up.mp3
 
   # Eugene V. Debs

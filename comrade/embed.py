@@ -2,7 +2,7 @@
 import numpy as np
 import requests
 
-from config import config
+from comrade.config import config
 
 BATCH_SIZE = 64
 # nomic-embed-text expects task prefixes; other models ignore them harmlessly

@@ -5,8 +5,8 @@ always comes from the database, so it can't be paraphrased or invented.
 """
 from xml.sax.saxutils import escape, quoteattr
 
-import llm
-from config import config
+from comrade import llm
+from comrade.config import config
 
 SYSTEM = """You pick quotes for a Reddit bot that replies to posts and comments with \
 a quote from a socialist or communist writer.

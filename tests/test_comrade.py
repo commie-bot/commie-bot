@@ -1,7 +1,7 @@
 import pytest
 
-import ingest
-import render
+from comrade import ingest
+from comrade import render
 
 PASSAGE = {
     "id": 1,
@@ -43,7 +43,7 @@ def test_sentence_split_roundtrip():
 
 
 def test_parse_json_tolerates_reasoning_and_fences():
-    import llm
+    from comrade import llm
 
     out = '<think>{"not": "this"}</think>\n```json\n{"picks": [{"passage_id": 1, "start": 0, "end": 0, "reason": "x"}]}\n```'
     assert llm.parse_json(out)["picks"][0]["passage_id"] == 1
@@ -52,7 +52,7 @@ def test_parse_json_tolerates_reasoning_and_fences():
 def test_chapter_links_stay_in_work_and_skip_guides():
     from bs4 import BeautifulSoup
 
-    import fetch
+    from comrade.sources import marxists as fetch
 
     index = "https://example.org/works/1848/manifesto/index.htm"
     html = """<a href="ch01.htm">I</a><a href="ch01.htm#s2">I again</a><a href="guide.htm">Guide</a>
@@ -84,7 +84,7 @@ lution goes on.
 
 
 def test_fbis_speech_keeps_only_castros_words():
-    import castro_db
+    from comrade.sources import castro_fbis as castro_db
 
     doc = castro_db.parse_doc(FBIS_PAGE)
     assert doc["type"] == "SPEECH"
@@ -94,7 +94,7 @@ def test_fbis_speech_keeps_only_castros_words():
 
 
 def test_fbis_wire_report_is_rejected():
-    import castro_db
+    from comrade.sources import castro_fbis as castro_db
 
     assert castro_db.is_report(["Havana--Premier Fidel Castro delivered the final speech today."])
     summary = FBIS_PAGE.replace("(Text) Comrade", "(Editorial report) Comrade")

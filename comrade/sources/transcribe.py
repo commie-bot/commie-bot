@@ -4,7 +4,7 @@ Runs faster-whisper on a GPU. It starts a new paragraph at long pauses, because
 recordings have no paragraph breaks.
 
     pip install faster-whisper
-    python transcribe.py speech.mp3 [more.mp3 ...] --out texts/malcolm-x
+    python -m comrade.sources.transcribe speech.mp3 [more.mp3 ...] --out texts/private/malcolm-x/transcripts
 """
 import argparse
 import os

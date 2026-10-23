@@ -10,7 +10,7 @@ Three providers:
 import json
 import re
 
-from config import config
+from comrade.config import config
 
 
 class LLMError(Exception):

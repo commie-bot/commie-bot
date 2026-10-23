@@ -2,7 +2,7 @@ import os
 from dataclasses import dataclass
 from dotenv import load_dotenv
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 load_dotenv(os.path.join(BASE_DIR, ".env"))
 
 
@@ -12,8 +12,10 @@ DEFAULT_BASE_URLS = {"cerebras": "https://api.cerebras.ai/v1"}
 
 @dataclass
 class Config:
-    DB_PATH: str = os.getenv("COMRADE_DB", os.path.join(BASE_DIR, "comrade.db"))
-    WORKS_FILE: str = os.getenv("COMRADE_WORKS", os.path.join(BASE_DIR, "works.yaml"))
+    DB_PATH: str = os.getenv("COMRADE_DB", os.path.join(BASE_DIR, "data", "comrade.db"))
+    # Catalog files, loaded in order. A later entry with the same id replaces an earlier one.
+    CATALOG_DIR: str = os.getenv("COMRADE_CATALOG", os.path.join(BASE_DIR, "catalog"))
+    CATALOG_FILES: tuple = ("marxists.yaml", "castro-fbis.yaml", "private.yaml")
     TEXTS_DIR: str = os.getenv("COMRADE_TEXTS", os.path.join(BASE_DIR, "texts"))
 
     # LLM (quote selection). Provider is "cerebras", "anthropic", or "openai" (any OpenAI-compatible API).

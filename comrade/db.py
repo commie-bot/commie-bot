@@ -1,7 +1,7 @@
 import sqlite3
 import time
 
-from config import config
+from comrade.config import config
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS works (

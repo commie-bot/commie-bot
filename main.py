@@ -7,14 +7,14 @@ from rich.progress import Progress
 from rich.prompt import Prompt
 from rich.table import Table
 
-import db
-import embed as embedder
-import fetch as fetcher
-import ingest as ingester
-import picker
-import render
-import search as searcher
-from config import config
+from comrade import db
+from comrade import embed as embedder
+from comrade.sources import marxists as fetcher
+from comrade import ingest as ingester
+from comrade import picker
+from comrade import render
+from comrade import search as searcher
+from comrade.config import config
 
 console = Console()
 
@@ -29,15 +29,15 @@ def _select_works(work_id):
     if work_id:
         works = [w for w in works if w["id"] == work_id]
         if not works:
-            raise click.ClickException(f"No work with id {work_id} in {config.WORKS_FILE}")
+            raise click.ClickException(f"No work with id {work_id} in {config.CATALOG_DIR}")
     return works
 
 
 @cli.command()
-@click.option("--work", "work_id", help="Download only this work id from works.yaml.")
+@click.option("--work", "work_id", help="Download only this work id from the catalog.")
 @click.option("--force", is_flag=True, help="Download again even if the file exists.")
 def fetch(work_id, force):
-    """Download works that have a url in works.yaml into texts/."""
+    """Download works that have a url in the catalog into texts/."""
     os.makedirs(config.TEXTS_DIR, exist_ok=True)
     for w in _select_works(work_id):
         path = os.path.join(config.TEXTS_DIR, w["file"])
@@ -58,19 +58,19 @@ def fetch(work_id, force):
 @click.option("--limit", type=int, help="Stop after adding this many speeches.")
 def fetch_castro(years, limit):
     """Download Castro speeches (FBIS translations) from the Castro Speech Database."""
-    import castro_db
+    from comrade.sources import castro_fbis as castro_db
 
     log = lambda m: console.print(f"[dim]{m}[/]")
-    base_dir = os.path.dirname(config.WORKS_FILE)
+    base_dir = config.CATALOG_DIR
     castro_db.prune(base_dir, config.TEXTS_DIR, log)
     added = castro_db.fetch(base_dir, config.TEXTS_DIR, years or castro_db.YEARS, limit, log)
     console.print(f"Added {added} speeches to {castro_db.WORKS_FILE}. Run [bold]python main.py ingest[/] next.")
 
 
 @cli.command()
-@click.option("--work", "work_id", help="Ingest only this work id from works.yaml.")
+@click.option("--work", "work_id", help="Ingest only this work id from the catalog.")
 def ingest(work_id):
-    """Parse texts listed in works.yaml into the database."""
+    """Parse texts listed in the catalog into the database."""
     conn = db.connect()
     works = _select_works(work_id)
     if not work_id:
@@ -78,7 +78,7 @@ def ingest(work_id):
         for (old,) in conn.execute("SELECT id FROM works").fetchall():
             if old not in keep:
                 db.delete_work(conn, old)
-                console.print(f"[dim]Removed {old} (no longer in works.yaml)[/]")
+                console.print(f"[dim]Removed {old} (no longer in the catalog)[/]")
         conn.commit()
 
     table = Table("id", "sections", "paragraphs", "sentences")
@@ -138,7 +138,7 @@ def quote(text, author):
 @click.option("--dry-run", is_flag=True, help="Show candidates without posting.")
 def reply(url, author, dry_run):
     """Reply to the Reddit post or comment at URL."""
-    import reddit
+    from comrade import reddit
 
     conn = db.connect()
     r = reddit.client()
@@ -163,7 +163,7 @@ def reply(url, author, dry_run):
 @click.option("--port", default=8765, show_default=True)
 def serve(port):
     """Open a local test page: paste text, see ranked passages and quote picks."""
-    import web
+    from comrade import web
 
     web.serve(port=port)
 

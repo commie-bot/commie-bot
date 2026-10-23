@@ -1,7 +1,7 @@
 import praw
 from praw.exceptions import InvalidURL
 
-from config import config
+from comrade.config import config
 
 
 def client() -> praw.Reddit:

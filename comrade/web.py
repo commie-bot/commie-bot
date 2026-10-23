@@ -3,11 +3,11 @@ import json
 import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-import db
-import picker
-import render
-import search as searcher
-from config import config
+from comrade import db
+from comrade import picker
+from comrade import render
+from comrade import search as searcher
+from comrade.config import config
 
 PAGE = """<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
