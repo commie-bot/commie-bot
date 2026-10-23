@@ -111,8 +111,16 @@ def parse_file(path: str) -> list[tuple[str, list[str]]]:
 
 
 def load_works(path: str = None) -> list[dict]:
-    with open(path or config.WORKS_FILE) as f:
-        works = yaml.safe_load(f)["works"]
+    """Load works.yaml plus any files in its include list that exist (such as castro-db.yaml)."""
+    path = path or config.WORKS_FILE
+    with open(path) as f:
+        data = yaml.safe_load(f)
+    works = data["works"]
+    for name in data.get("include", []):
+        extra = os.path.join(os.path.dirname(path), name)
+        if os.path.exists(extra):
+            with open(extra) as f:
+                works += (yaml.safe_load(f) or {}).get("works", [])
     for w in works:
         missing = [k for k in ("id", "author", "title") if not w.get(k)]
         if missing:

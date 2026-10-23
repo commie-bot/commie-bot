@@ -5,3 +5,5 @@ __pycache__/
 .venv/
 fetch.log
 embed.log
+castro-db.yaml
+castro.log

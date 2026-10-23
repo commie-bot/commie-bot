@@ -60,3 +60,42 @@ def test_chapter_links_stay_in_work_and_skip_guides():
     links = fetch.chapter_links(index, BeautifulSoup(html, "html.parser"))
     assert links == ["https://example.org/works/1848/manifesto/ch01.htm",
                      "https://example.org/works/1848/manifesto/ch02.htm"]
+
+
+FBIS_PAGE = """-DOCUMENT_TYPE-
+SPEECH
+-AUTHOR-
+F. CASTRO
+-HEADLINE-
+MAY DAY CELEBRATION
+-DATE-
+19660502
+-TEXT-
+Text of Castro Speech
+
+Havana Domestic Radio and Television Services in Spanish 2334 GMT 1 May 1966--F/E
+
+(Text) Comrade guests, (applause) comrade macheteros:
+
+We have worked hard this year, and the revo-
+lution goes on.
+-END-
+"""
+
+
+def test_fbis_speech_keeps_only_castros_words():
+    import castro_db
+
+    doc = castro_db.parse_doc(FBIS_PAGE)
+    assert doc["type"] == "SPEECH"
+    assert doc["paragraphs"] == ["Comrade guests, comrade macheteros:",
+                                 "We have worked hard this year, and the revolution goes on."]
+    assert not castro_db.is_report(doc["paragraphs"])
+
+
+def test_fbis_wire_report_is_rejected():
+    import castro_db
+
+    assert castro_db.is_report(["Havana--Premier Fidel Castro delivered the final speech today."])
+    summary = FBIS_PAGE.replace("(Text) Comrade", "(Editorial report) Comrade")
+    assert castro_db.parse_doc(summary)["paragraphs"] == []

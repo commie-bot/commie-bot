@@ -53,6 +53,20 @@ def fetch(work_id, force):
             console.print(f"[red]Failed {w['id']}: {e}[/]")
 
 
+@cli.command("fetch-castro")
+@click.option("--year", "years", type=int, multiple=True, help="Only this year (repeatable). Default: 1959 to 1996.")
+@click.option("--limit", type=int, help="Stop after adding this many speeches.")
+def fetch_castro(years, limit):
+    """Download Castro speeches (FBIS translations) from the Castro Speech Database."""
+    import castro_db
+
+    log = lambda m: console.print(f"[dim]{m}[/]")
+    base_dir = os.path.dirname(config.WORKS_FILE)
+    castro_db.prune(base_dir, config.TEXTS_DIR, log)
+    added = castro_db.fetch(base_dir, config.TEXTS_DIR, years or castro_db.YEARS, limit, log)
+    console.print(f"Added {added} speeches to {castro_db.WORKS_FILE}. Run [bold]python main.py ingest[/] next.")
+
+
 @cli.command()
 @click.option("--work", "work_id", help="Ingest only this work id from works.yaml.")
 def ingest(work_id):
