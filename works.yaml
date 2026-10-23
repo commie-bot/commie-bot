@@ -126,6 +126,90 @@ works:
     type: book
     url: https://www.marxists.org/archive/marx/works/1884/origin-family/index.htm
 
+  - id: critique-pol-economy-preface
+    author: Karl Marx
+    title: "Preface to A Contribution to the Critique of Political Economy"
+    year: 1859
+    type: article
+    url: https://www.marxists.org/archive/marx/works/1859/critique-pol-economy/preface.htm
+
+  - id: jewish-question
+    author: Karl Marx
+    title: "On the Jewish Question"
+    year: 1844
+    type: article
+    url: https://www.marxists.org/archive/marx/works/1844/jewish-question/index.htm
+
+  - id: poverty-of-philosophy
+    author: Karl Marx
+    title: "The Poverty of Philosophy"
+    year: 1847
+    type: book
+    url: https://www.marxists.org/archive/marx/works/1847/poverty-philosophy/index.htm
+
+  - id: class-struggles-in-france
+    author: Karl Marx
+    title: "The Class Struggles in France, 1848 to 1850"
+    year: 1850
+    type: book
+    url: https://www.marxists.org/archive/marx/works/1850/class-struggles-france/index.htm
+
+  - id: grundrisse
+    author: Karl Marx
+    title: "Grundrisse"
+    year: 1858
+    type: book
+    url: https://www.marxists.org/archive/marx/works/1857/grundrisse/index.htm
+
+  - id: capital-v2
+    author: Karl Marx
+    title: "Capital, Volume II"
+    year: 1885
+    type: book
+    url: https://www.marxists.org/archive/marx/works/1885-c2/index.htm
+
+  - id: capital-v3
+    author: Karl Marx
+    title: "Capital, Volume III"
+    year: 1894
+    type: book
+    url: https://www.marxists.org/archive/marx/works/1894-c3/index.htm
+
+  - id: on-authority
+    author: Friedrich Engels
+    title: "On Authority"
+    year: 1872
+    type: article
+    url: https://www.marxists.org/archive/marx/works/1872/10/authority.htm
+
+  - id: housing-question
+    author: Friedrich Engels
+    title: "The Housing Question"
+    year: 1872
+    type: book
+    url: https://www.marxists.org/archive/marx/works/1872/housing-question/index.htm
+
+  - id: anti-duhring
+    author: Friedrich Engels
+    title: "Anti-Dühring"
+    year: 1877
+    type: book
+    url: https://www.marxists.org/archive/marx/works/1877/anti-duhring/index.htm
+
+  - id: engels-speech-at-marxs-grave
+    author: Friedrich Engels
+    title: "Speech at the Grave of Karl Marx"
+    year: 1883
+    type: speech
+    url: https://www.marxists.org/archive/marx/works/1883/death/burial.htm
+
+  - id: ludwig-feuerbach
+    author: Friedrich Engels
+    title: "Ludwig Feuerbach and the End of Classical German Philosophy"
+    year: 1886
+    type: book
+    url: https://www.marxists.org/archive/marx/works/1886/ludwig-feuerbach/index.htm
+
   # Vladimir Lenin
   - id: what-is-to-be-done
     author: Vladimir Lenin
@@ -176,6 +260,41 @@ works:
     type: book
     url: https://www.marxists.org/archive/lenin/works/1920/lwc/index.htm
 
+  - id: two-tactics
+    author: Vladimir Lenin
+    title: "Two Tactics of Social-Democracy in the Democratic Revolution"
+    year: 1905
+    type: book
+    url: https://www.marxists.org/archive/lenin/works/1905/tactics/index.htm
+
+  - id: socialism-and-religion
+    author: Vladimir Lenin
+    title: "Socialism and Religion"
+    year: 1905
+    type: article
+    url: https://www.marxists.org/archive/lenin/works/1905/dec/03.htm
+
+  - id: materialism-and-empirio-criticism
+    author: Vladimir Lenin
+    title: "Materialism and Empirio-criticism"
+    year: 1908
+    type: book
+    url: https://www.marxists.org/archive/lenin/works/1908/mec/index.htm
+
+  - id: right-of-nations
+    author: Vladimir Lenin
+    title: "The Right of Nations to Self-Determination"
+    year: 1914
+    type: book
+    url: https://www.marxists.org/archive/lenin/works/1914/self-det/index.htm
+
+  - id: tasks-of-the-youth-leagues
+    author: Vladimir Lenin
+    title: "The Tasks of the Youth Leagues"
+    year: 1920
+    type: speech
+    url: https://www.marxists.org/archive/lenin/works/1920/oct/02.htm
+
   # Joseph Stalin
   - id: national-question
     author: Joseph Stalin
@@ -198,6 +317,27 @@ works:
     year: 1938
     type: pamphlet
     url: https://www.marxists.org/reference/archive/stalin/works/1938/09.htm
+
+  - id: anarchism-or-socialism
+    author: Joseph Stalin
+    title: "Anarchism or Socialism?"
+    year: 1906
+    type: pamphlet
+    url: https://www.marxists.org/reference/archive/stalin/works/1906/12/x01.htm
+
+  - id: stalin-wells-interview
+    author: Joseph Stalin
+    title: "Marxism Versus Liberalism: An Interview with H.G. Wells"
+    year: 1934
+    type: article
+    url: https://www.marxists.org/reference/archive/stalin/works/1934/07/23.htm
+
+  - id: economic-problems-of-socialism
+    author: Joseph Stalin
+    title: "Economic Problems of Socialism in the USSR"
+    year: 1951
+    type: book
+    url: https://www.marxists.org/reference/archive/stalin/works/1951/economic-problems/index.htm
 
   # Rosa Luxemburg
   - id: reform-or-revolution
@@ -277,6 +417,41 @@ works:
     year: 1964
     type: book
     url: https://www.marxists.org/reference/archive/mao/works/red-book/index.htm
+
+  - id: hunan-report
+    author: Mao Zedong
+    title: "Report on an Investigation of the Peasant Movement in Hunan"
+    year: 1927
+    type: article
+    url: https://www.marxists.org/reference/archive/mao/selected-works/volume-1/mswv1_2.htm
+
+  - id: on-protracted-war
+    author: Mao Zedong
+    title: "On Protracted War"
+    year: 1938
+    type: book
+    url: https://www.marxists.org/reference/archive/mao/selected-works/volume-2/mswv2_09.htm
+
+  - id: problems-of-war-and-strategy
+    author: Mao Zedong
+    title: "Problems of War and Strategy"
+    year: 1938
+    type: article
+    url: https://www.marxists.org/reference/archive/mao/selected-works/volume-2/mswv2_12.htm
+
+  - id: yenan-forum
+    author: Mao Zedong
+    title: "Talks at the Yenan Forum on Literature and Art"
+    year: 1942
+    type: speech
+    url: https://www.marxists.org/reference/archive/mao/selected-works/volume-3/mswv3_08.htm
+
+  - id: correct-handling-of-contradictions
+    author: Mao Zedong
+    title: "On the Correct Handling of Contradictions Among the People"
+    year: 1957
+    type: speech
+    url: https://www.marxists.org/reference/archive/mao/selected-works/volume-5/mswv5_58.htm
 
   # Ho Chi Minh
   - id: vietnam-declaration-of-independence
@@ -898,3 +1073,300 @@ works:
     year: 1918
     type: speech
     url: https://www.marxists.org/archive/debs/works/1918/court.htm
+
+  - id: debs-canton-speech
+    author: Eugene V. Debs
+    title: "The Canton, Ohio Speech"
+    year: 1918
+    type: speech
+    url: https://www.marxists.org/archive/debs/works/1918/canton.htm
+
+  # Thomas Sankara
+  - id: sankara-1983-aug-04
+    author: Thomas Sankara
+    title: "A Radiant Future for Our Country"
+    year: 1983
+    type: speech
+    url: https://www.marxists.org/archive/sankara/1983/august/04.htm
+
+  - id: sankara-1984-jan-23
+    author: Thomas Sankara
+    title: "We Didn't Import Our Revolution"
+    year: 1984
+    type: speech
+    url: https://www.marxists.org/archive/sankara/1984/january/23.htm
+
+  - id: sankara-1984-oct-03
+    author: Thomas Sankara
+    title: "Our White House Is in Black Harlem"
+    year: 1984
+    type: speech
+    url: https://www.marxists.org/archive/sankara/1984/october/03.htm
+
+  - id: sankara-1984-oct-04
+    author: Thomas Sankara
+    title: "Speech Before the General Assembly of the United Nations"
+    year: 1984
+    type: speech
+    url: https://www.marxists.org/archive/sankara/1984/october/04.htm
+
+  - id: sankara-1986-feb-05
+    author: Thomas Sankara
+    title: "Imperialism Is the Arsonist of Our Forests and Savannas"
+    year: 1986
+    type: speech
+    url: https://www.marxists.org/archive/sankara/1986/february/05.htm
+
+  - id: sankara-1986-apr-21
+    author: Thomas Sankara
+    title: "Blacks Must Take Responsibility for Their Own History"
+    year: 1986
+    type: speech
+    url: https://www.marxists.org/archive/sankara/1986/april/21.htm
+
+  - id: sankara-1986-jul-19
+    author: Thomas Sankara
+    title: "Apartheid Is a Cancer That Must Be Exterminated"
+    year: 1986
+    type: speech
+    url: https://www.marxists.org/archive/sankara/1986/july/19.htm
+
+  - id: sankara-1986-oct-31
+    author: Thomas Sankara
+    title: "A Death That Must Enlighten and Strengthen Us"
+    year: 1986
+    type: speech
+    url: https://www.marxists.org/archive/sankara/1986/october/31.htm
+
+  - id: sankara-1987-jan-13
+    author: Thomas Sankara
+    title: "The Courage to Criticize Imperialism"
+    year: 1987
+    type: speech
+    url: https://www.marxists.org/archive/sankara/1987/january/13.htm
+
+  - id: sankara-1987-jul-29
+    author: Thomas Sankara
+    title: "A United Front Against Debt"
+    year: 1987
+    type: speech
+    url: https://www.marxists.org/archive/sankara/1987/july/29.htm
+
+  - id: sankara-1987-oct-15
+    author: Thomas Sankara
+    title: "The Speech He Would Have Given on October 15, 1987"
+    year: 1987
+    type: speech
+    url: https://www.marxists.org/archive/sankara/1987/october/15.htm
+
+  # Fred Hampton
+  - id: hampton-you-can-murder-a-liberator-but-you-can-t
+    author: Fred Hampton
+    title: "You Can Murder a Liberator, but You Can't Murder Liberation"
+    year: 1969
+    type: speech
+    url: https://www.marxists.org/archive/hampton/1969/04/27.htm
+
+  - id: hampton-we-have-to-protect-our-leaders
+    author: Fred Hampton
+    title: "We Have to Protect Our Leaders!"
+    year: 1969
+    type: speech
+    url: https://www.marxists.org/archive/hampton/1969/05/19.htm
+
+  - id: hampton-it-s-a-class-struggle-goddamnit
+    author: Fred Hampton
+    title: "It's a Class Struggle Goddamnit!"
+    year: 1969
+    type: speech
+    url: https://www.marxists.org/archive/hampton/1969/11/class-struggle-godamnit.htm
+
+  - id: hampton-power-anywhere-where-there-s-people
+    author: Fred Hampton
+    title: "Power Anywhere Where There's People"
+    year: 1969
+    type: speech
+    url: https://www.marxists.org/archive/hampton/1969/misc/power-anywhere-where-theres-people.htm
+
+  - id: hampton-why-don-t-you-die-for-the-people
+    author: Fred Hampton
+    title: "Why Don't You Die for the People?"
+    year: 1969
+    type: speech
+    url: https://www.marxists.org/archive/hampton/misc/why-dont-you-die-for-the-people.htm
+
+  # Georgi Dimitrov
+  - id: dimitrov-fascist-offensive
+    author: Georgi Dimitrov
+    title: "The Fascist Offensive and the Tasks of the Communist International"
+    year: 1935
+    type: speech
+    url: https://www.marxists.org/reference/archive/dimitrov/works/1935/08_02.htm
+
+  # Amílcar Cabral
+  - id: cabral-weapon-of-theory
+    author: Amílcar Cabral
+    title: "The Weapon of Theory"
+    year: 1966
+    type: speech
+    url: https://www.marxists.org/subject/africa/cabral/1966/weapon-theory.htm
+
+  # Kwame Nkrumah
+  - id: neo-colonialism
+    author: Kwame Nkrumah
+    title: "Neo-Colonialism: The Last Stage of Imperialism"
+    year: 1965
+    type: book
+    url: https://www.marxists.org/subject/africa/nkrumah/neo-colonialism/index.htm
+
+  - id: nkrumah-i-speak-of-freedom
+    author: Kwame Nkrumah
+    title: "I Speak of Freedom"
+    year: 1961
+    type: book
+    url: https://www.marxists.org/subject/africa/nkrumah/1961/speak-freedom.htm
+
+  - id: nkrumah-african-socialism-revisited
+    author: Kwame Nkrumah
+    title: "African Socialism Revisited"
+    year: 1967
+    type: article
+    url: https://www.marxists.org/subject/africa/nkrumah/1967/african-socialism-revisited.htm
+
+  # Alexandra Kollontai
+  - id: kollontai-social-basis
+    author: Alexandra Kollontai
+    title: "The Social Basis of the Woman Question"
+    year: 1909
+    type: pamphlet
+    url: https://www.marxists.org/archive/kollonta/1909/social-basis.htm
+
+  - id: kollontai-love-and-new-morality
+    author: Alexandra Kollontai
+    title: "Love and the New Morality"
+    year: 1911
+    type: article
+    url: https://www.marxists.org/archive/kollonta/1911/new-morality.htm
+
+  - id: kollontai-communism-and-the-family
+    author: Alexandra Kollontai
+    title: "Communism and the Family"
+    year: 1920
+    type: article
+    url: https://www.marxists.org/archive/kollonta/1920/communism-family.htm
+
+  - id: kollontai-international-womens-day
+    author: Alexandra Kollontai
+    title: "International Women's Day"
+    year: 1920
+    type: article
+    url: https://www.marxists.org/archive/kollonta/1920/womens-day.htm
+
+  - id: kollontai-workers-opposition
+    author: Alexandra Kollontai
+    title: "The Workers' Opposition"
+    year: 1921
+    type: pamphlet
+    url: https://www.marxists.org/archive/kollonta/1921/workers-opposition/index.htm
+
+  - id: kollontai-sexual-relations-class-struggle
+    author: Alexandra Kollontai
+    title: "Sexual Relations and the Class Struggle"
+    year: 1921
+    type: article
+    url: https://www.marxists.org/archive/kollonta/1921/sex-class-struggle.htm
+
+  - id: kollontai-theses-on-communist-morality
+    author: Alexandra Kollontai
+    title: "Theses on Communist Morality in the Sphere of Marital Relations"
+    year: 1921
+    type: article
+    url: https://www.marxists.org/archive/kollonta/1921/theses-morality.htm
+
+  # Clara Zetkin
+  - id: zetkin-proletarian-woman
+    author: Clara Zetkin
+    title: "Only in Conjunction With the Proletarian Woman Will Socialism Be Victorious"
+    year: 1896
+    type: speech
+    url: https://www.marxists.org/archive/zetkin/1896/10/women.htm
+
+  - id: zetkin-woman-suffrage
+    author: Clara Zetkin
+    title: "Social-Democracy and Woman Suffrage"
+    year: 1906
+    type: pamphlet
+    url: https://www.marxists.org/archive/zetkin/1906/xx/womansuffrage.htm
+
+  - id: zetkin-dictatorship-to-democracy
+    author: Clara Zetkin
+    title: "Through Dictatorship to Democracy"
+    year: 1919
+    type: article
+    url: https://www.marxists.org/archive/zetkin/1919/xx/dictdem.htm
+
+  - id: zetkin-struggle-against-fascism
+    author: Clara Zetkin
+    title: "The Struggle Against Fascism"
+    year: 1923
+    type: speech
+    url: https://www.marxists.org/archive/zetkin/1923/06/struggle-against-fascism.html
+
+  # Nikolai Bukharin
+  - id: abc-of-communism
+    author: Nikolai Bukharin and Evgenii Preobrazhensky
+    title: "The ABC of Communism"
+    year: 1920
+    type: book
+    url: https://www.marxists.org/archive/bukharin/works/1920/abc/index.htm
+
+  # Helen Keller
+  - id: keller-how-i-became-a-socialist
+    author: Helen Keller
+    title: "How I Became a Socialist"
+    year: 1912
+    type: article
+    url: https://www.marxists.org/reference/archive/keller-helen/works/1910s/12_11_03.htm
+
+  - id: keller-menace-of-the-militarist-program
+    author: Helen Keller
+    title: "Menace of the Militarist Program"
+    year: 1915
+    type: article
+    url: https://www.marxists.org/reference/archive/keller-helen/works/1910s/15_12_19.htm
+
+  - id: keller-strike-against-war
+    author: Helen Keller
+    title: "Strike Against War"
+    year: 1916
+    type: speech
+    url: https://www.marxists.org/reference/archive/keller-helen/works/1910s/16_01_05.htm
+
+  - id: keller-why-i-became-an-iww
+    author: Helen Keller
+    title: "Why I Became an IWW"
+    year: 1916
+    type: article
+    url: https://www.marxists.org/reference/archive/keller-helen/works/1910s/16_01_16.htm
+
+  - id: keller-what-is-the-iww
+    author: Helen Keller
+    title: "What Is the IWW?"
+    year: 1918
+    type: article
+    url: https://www.marxists.org/reference/archive/keller-helen/works/1910s/18_01_x01.htm
+
+  - id: keller-end-the-blockade
+    author: Helen Keller
+    title: "End the Blockade of Soviet Russia!"
+    year: 1919
+    type: article
+    url: https://www.marxists.org/reference/archive/keller-helen/works/1910s/19_11_10.htm
+
+  # Oscar Wilde
+  - id: soul-of-man-under-socialism
+    author: Oscar Wilde
+    title: "The Soul of Man under Socialism"
+    year: 1891
+    type: article
+    url: https://www.marxists.org/reference/archive/wilde-oscar/soul-man/index.htm
