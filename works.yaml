@@ -15,6 +15,7 @@
 
 include:
   - castro-db.yaml  # written by `python main.py fetch-castro`
+  - library.yaml    # your own copies of books, not committed
 
 works:
   # Karl Marx and Friedrich Engels

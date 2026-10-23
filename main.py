@@ -87,7 +87,7 @@ def ingest(work_id):
         if not os.path.exists(path):
             console.print(f"[yellow]Skipping {w['id']}: {path} not found[/]")
             continue
-        sections = ingester.build_sections(path)
+        sections = ingester.build_sections(path, w)
         n_paragraphs = db.insert_work(conn, w, sections)
         n_sentences = sum(len(s) for _, ps in sections for _, s in ps)
         table.add_row(w["id"], str(len(sections)), str(n_paragraphs), str(n_sentences))
