@@ -47,8 +47,13 @@ def split_sentences(text: str) -> list[str]:
 
 def parse_html(html: str, default_title: str = "") -> list[tuple[str, list[str]]]:
     soup = BeautifulSoup(html, "lxml")
-    for tag in soup(["script", "style", "sup", "blockquote"]):  # block quotes are other writers' words
+    for tag in soup(["script", "style", "sup"]):
         tag.decompose()
+    for tag in soup("blockquote"):
+        if tag.find(HEADINGS):
+            tag.unwrap()  # some pages wrap the whole text in a block quote for layout
+        else:
+            tag.decompose()  # block quotes are other writers' words
     for tag in soup.find_all(class_=_is_quoted_class):
         tag.decompose()
     for a in soup.find_all("a", href=re.compile(r"^#")):
