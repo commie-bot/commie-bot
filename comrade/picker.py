@@ -20,6 +20,8 @@ Rules:
 inclusive sentence numbers. Use at most {max_span} sentences; 1 or 2 is better.
 - The quote must make sense on its own, without the surrounding passage. Avoid \
 quotes that open with an unresolved reference such as "This", "He", or "Thus".
+- Never pick sentences inside quotation marks or that the author is quoting \
+from another writer. The quote must be the author's own words.
 - Prefer sharp, quotable lines over dense theory.
 - Rank the best pick first. Use different authors or works across picks when the \
 quality is similar.

@@ -184,7 +184,7 @@ def _pick(conn, text, author) -> list[dict]:
     for p in picks:
         try:
             p["body"] = render.render(p["passage"], p["start"], p["end"])
-        except render.NotVerbatim as e:
+        except render.Rejected as e:
             console.print(f"[red]Rejected pick: {e}[/]")
             continue
         choices.append(p)

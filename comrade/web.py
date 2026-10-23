@@ -125,7 +125,7 @@ def handle_pick(body):
     for p in picker.pick(body["text"], passages) if passages else []:
         try:
             quote = render.quote_text(p["passage"], p["start"], p["end"])
-        except render.NotVerbatim as e:
+        except render.Rejected as e:
             warnings.append(str(e))
             continue
         results.append({**{f: p["passage"].get(f) for f in FIELDS}, "quote": quote, "reason": p["reason"],

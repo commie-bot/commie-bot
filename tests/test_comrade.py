@@ -29,6 +29,36 @@ def test_altered_quote_rejected():
         render.render(altered, 0, 0)
 
 
+def _passage(text):
+    return dict(PASSAGE, text=text, sentences=ingest.split_sentences(text))
+
+
+def test_inline_quote_of_another_writer_rejected():
+    text = ("Adam Smith writes: “The landlord demands a rent even for unimproved land. "
+            "He reaps where he never sowed.” This is the essence of rent.")
+    p = dict(PASSAGE, text=text, sentences=[
+        "Adam Smith writes: “The landlord demands a rent even for unimproved land.",
+        "He reaps where he never sowed.”",
+        "This is the essence of rent.",
+    ])
+    for start, end in [(0, 0), (1, 1), (0, 1), (1, 2)]:  # mostly Smith's words, or starts inside them
+        with pytest.raises(render.QuotesAnotherWriter):
+            render.quote_text(p, start, end)
+    assert render.quote_text(p, 2, 2) == "This is the essence of rent."
+
+
+def test_excerpt_opening_with_ellipsis_rejected():
+    p = _passage("... the tenants have organized themselves into a body, and resolved not to pay any more rent.")
+    with pytest.raises(render.QuotesAnotherWriter):
+        render.quote_text(p, 0, 0)
+
+
+def test_short_scare_quotes_allowed():
+    p = _passage("They called me “the angriest Negro in America.” I wouldn’t deny that charge, "
+                 "because I spoke exactly as I felt about this country and its treatment of my people.")
+    assert render.quote_text(p, 0, 1)
+
+
 def test_section_matching_title_is_omitted():
     p = dict(PASSAGE, section="theses on feuerbach", source_url="https://example.org")
     assert render.citation(p) == "**Karl Marx**, [*Theses on Feuerbach*](https://example.org) (1845)"
