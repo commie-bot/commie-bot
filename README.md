@@ -2,15 +2,22 @@
 
 A CLI that replies to a Reddit post or comment with a verbatim quote from a socialist or communist writer.
 
-The pipeline:
+Ahead of time, the bot builds an index of quotes:
+
+1. Split every work into paragraphs and sentences.
+2. Extract quote candidates: every run of 1 to 3 sentences, under 300 characters, that can stand alone. Rules drop spans that open with a word like "This" or "Thus", fragments, statistics, and words the author quotes from someone else.
+3. Optional: an LLM reads every paragraph once, rates its best quotes from 3 to 5, and writes a one-line summary of each quote's point in plain modern English.
+4. Embed each quote and each summary with Ollama.
+
+To reply:
 
 1. Fetch the post or comment text.
-2. Retrieve the top 30 paragraphs with hybrid search (SQLite FTS5 BM25 plus Ollama embeddings, merged with reciprocal rank fusion).
-3. Ask an LLM to pick up to 3 quotes. The model returns only a passage ID and a sentence range.
+2. Retrieve the top 20 quotes with hybrid search: SQLite FTS5 BM25 over the quotes and summaries, plus embeddings of both, merged with reciprocal rank fusion. Higher-rated quotes get a boost, and quotes the LLM passed over get a penalty.
+3. Ask an LLM to pick up to 3 of them. The model returns only quote IDs.
 4. Build each quote from the stored sentences and check that it's an exact substring of the source paragraph.
 5. Show the candidates. You pick one, and the bot posts it.
 
-Because the model never writes quote text, every quote is verbatim.
+Because the model never writes quote text, every quote is verbatim. Matching against summaries finds quotes that make the same point as a post in different words, such as "my landlord takes half my paycheck" and a passage on rent absorbing the tenant's profit.
 
 ## Choose an LLM
 
@@ -108,16 +115,19 @@ Add a text to `texts/public/` only if it's in the public domain. Never commit `t
 python main.py fetch                  # download works that have a url
 python main.py ingest                 # parse all works (re-running replaces them)
 python main.py ingest --work manifesto
-python main.py embed                  # embed new paragraphs
+python main.py rate                   # LLM ratings and summaries (resumes; about $11 for the full corpus on Cerebras)
+python main.py embed                  # embed new quotes and summaries
 python main.py search "landlords are parasites"        # retrieval only
 python main.py quote "landlords are parasites"         # retrieval + LLM, no Reddit
 python main.py reply <reddit-url> --dry-run
 python main.py reply <reddit-url> --author lenin
 ```
 
+`ingest` also extracts the quote candidates. Run `rate` and then `embed` after you add works. `rate` is optional: without it, every quote is unrated and ranks on its match alone. Ratings and vectors are stored by a hash of the quote text, so re-ingesting a work doesn't redo them.
+
 `search` works without embeddings; it falls back to keyword search and prints a warning.
 
-To test retrieval in a browser, run `python main.py serve` and open `http://127.0.0.1:8765`. Paste text, then click **Search** to see ranked passages, or **Pick quotes with the LLM** to see the quotes the bot would post. The page listens only on your computer.
+To test retrieval in a browser, run `python main.py serve` and open `http://127.0.0.1:8765`. Paste text, then click **Search** to see ranked quotes with their ratings and summaries, or **Pick quotes with the LLM** to see the quotes the bot would post. The page listens only on your computer.
 
 ## Reply format
 

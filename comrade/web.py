@@ -47,7 +47,7 @@ PAGE = """<!doctype html>
 <textarea id="text" placeholder="Paste a Reddit post or comment"></textarea>
 <div class="row">
   <input id="author" placeholder="Author filter (optional), such as lenin">
-  <input id="k" type="number" value="20" min="1" max="100" title="Number of passages">
+  <input id="k" type="number" value="20" min="1" max="100" title="Number of quotes">
   <button id="search">Search</button>
   <button id="pick" class="primary">Pick quotes with the LLM</button>
 </div>
@@ -78,16 +78,18 @@ async function run(mode) {
     $("status").textContent = `${data.results.length} results in ${secs} s` + (data.warning ? ` (${data.warning})` : "");
     $("results").innerHTML = data.results.map((p, i) => mode === "pick" ? `
       <div class="card">
-        <div class="meta"><span>#${i + 1}</span><span>passage ${p.id}, sentences ${p.start}-${p.end}</span></div>
+        <div class="meta"><span>#${i + 1}</span><span>quote ${p.quote_id}</span></div>
         <div class="quote">${esc(p.quote)}</div>
         <div class="cite">${cite(p)}</div>
         <div class="reason">${esc(p.reason)}</div>
         <details><summary>Reddit reply</summary><pre>${esc(p.body)}</pre></details>
       </div>` : `
       <div class="card">
-        <div class="meta"><span>#${i + 1}</span><span>score ${p.score.toFixed(4)}</span><span>passage ${p.id}</span></div>
-        <div class="text">${esc(p.text)}</div>
+        <div class="meta"><span>#${i + 1}</span><span>score ${p.score.toFixed(4)}</span>
+          <span>${p.rating == null ? "unrated" : "rated " + p.rating}</span><span>quote ${p.id}</span></div>
+        <div class="quote">${esc(p.text)}</div>
         <div class="cite">${cite(p)}</div>
+        ${p.summary ? `<div class="reason">${esc(p.summary)}</div>` : ""}
       </div>`).join("") || "<p>No results.</p>";
   } catch (e) {
     $("status").textContent = "Error: " + e.message;
@@ -111,8 +113,9 @@ def _search(conn, body, warnings):
 
 def handle_search(body):
     conn, warnings = db.connect(), []
-    results = [{**{f: p.get(f) for f in FIELDS}, "text": p["text"], "score": p["score"]}
-               for p in _search(conn, body, warnings)]
+    results = [{**{f: q.get(f) for f in FIELDS}, "text": q["text"], "score": q["score"],
+                "rating": q["rating"], "summary": q["summary"]}
+               for q in _search(conn, body, warnings)]
     return {"results": results, "warning": "; ".join(warnings)}
 
 
@@ -120,15 +123,16 @@ def handle_pick(body):
     if config.LLM_PROVIDER in ("cerebras", "anthropic") and not (config.LLM_API_KEY or os.getenv("ANTHROPIC_API_KEY")):
         raise RuntimeError(f"No API key for {config.LLM_PROVIDER}. Set LLM_API_KEY in .env, then restart the page.")
     conn, warnings = db.connect(), []
-    passages = _search(conn, {**body, "k": None}, warnings)  # the picker sees config.CANDIDATES passages
+    candidates = _search(conn, {**body, "k": None}, warnings)  # the picker sees config.CANDIDATES quotes
     results = []
-    for p in picker.pick(body["text"], passages) if passages else []:
+    for p in picker.pick(body["text"], candidates) if candidates else []:
         try:
             quote = render.quote_text(p["passage"], p["start"], p["end"])
         except render.Rejected as e:
             warnings.append(str(e))
             continue
         results.append({**{f: p["passage"].get(f) for f in FIELDS}, "quote": quote, "reason": p["reason"],
+                        "quote_id": p["quote_id"],
                         "start": p["start"], "end": p["end"],
                         "body": render.render(p["passage"], p["start"], p["end"])})
     return {"results": results, "warning": "; ".join(warnings)}

@@ -36,7 +36,7 @@ class Config:
     REDDIT_USER_AGENT: str = os.getenv("REDDIT_USER_AGENT", "comrade-bot/0.1")
 
     # Retrieval
-    CANDIDATES: int = int(os.getenv("COMRADE_CANDIDATES", "30"))
+    CANDIDATES: int = int(os.getenv("COMRADE_CANDIDATES", "20"))
     REPEAT_DAYS: int = int(os.getenv("COMRADE_REPEAT_DAYS", "30"))
     MAX_SPAN: int = 3  # max sentences per quote
     MAX_QUOTE_CHARS: int = int(os.getenv("COMRADE_MAX_QUOTE_CHARS", "300"))

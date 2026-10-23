@@ -12,6 +12,7 @@ from comrade import embed as embedder
 from comrade.sources import marxists as fetcher
 from comrade import ingest as ingester
 from comrade import picker
+from comrade import quotes
 from comrade import render
 from comrade import search as searcher
 from comrade.config import config
@@ -92,20 +93,17 @@ def ingest(work_id):
         n_sentences = sum(len(s) for _, ps in sections for _, s in ps)
         table.add_row(w["id"], str(len(sections)), str(n_paragraphs), str(n_sentences))
     console.print(table)
-    console.print("Run [bold]python main.py embed[/] to update embeddings.")
+    n_quotes = quotes.extract(conn, [work_id] if work_id else None)
+    console.print(f"Extracted {n_quotes} quote candidates. Run [bold]python main.py embed[/] to update embeddings.")
 
 
 @cli.command()
 def embed():
-    """Embed paragraphs that don't have a vector yet."""
+    """Embed quotes and summaries that don't have a vector yet."""
     conn = db.connect()
-    todo = conn.execute(
-        """SELECT COUNT(*) FROM paragraphs p LEFT JOIN embeddings e
-           ON e.paragraph_id = p.id AND e.model = ? WHERE e.paragraph_id IS NULL""",
-        (config.EMBED_MODEL,),
-    ).fetchone()[0]
+    todo = len(embedder.missing(conn))
     if not todo:
-        console.print("All paragraphs are embedded.")
+        console.print("All quotes and summaries are embedded.")
         return
     with Progress(console=console) as progress:
         task = progress.add_task(f"Embedding with {config.EMBED_MODEL}", total=todo)
@@ -113,14 +111,36 @@ def embed():
 
 
 @cli.command()
+@click.option("--author", help="Only rate this author's paragraphs (substring match).")
+@click.option("--limit", type=int, help="Stop after this many paragraphs.")
+@click.option("--workers", default=8, show_default=True, help="Parallel LLM requests.")
+def rate(author, limit, workers):
+    """Rate quote candidates with the LLM and write summaries. Resumes where it stopped."""
+    conn = db.connect()
+    todo = len(quotes._unrated(conn, author)[:limit])
+    if not todo:
+        console.print(f"All paragraphs are rated with {config.LLM_MODEL}.")
+        return
+    with Progress(console=console) as progress:
+        task = progress.add_task(f"Rating with {config.LLM_MODEL}", total=todo)
+        rated, chosen = quotes.rate(conn, author, limit, workers=workers,
+                                    progress=lambda n: progress.advance(task, n),
+                                    warn=lambda m: console.print(f"[yellow]{m}[/]"))
+    console.print(f"Rated {rated} paragraphs and chose {chosen} quotes. Run [bold]python main.py embed[/] next.")
+
+
+@cli.command()
 @click.argument("text")
 @click.option("--author", help="Only search this author (substring match).")
 @click.option("-k", default=10, show_default=True, help="Number of results.")
 def search(text, author, k):
-    """Show retrieved passages for TEXT, without calling the LLM."""
+    """Show retrieved quotes for TEXT, without calling the LLM."""
     conn = db.connect()
-    for p in _search(conn, text, author, k):
-        console.print(Panel(p["text"], title=f"[{p['id']}] {render.citation(p)}", title_align="left"))
+    for q in _search(conn, text, author, k):
+        rating = "unrated" if q["rating"] is None else f"rated {q['rating']}"
+        note = f"{rating}, score {q['score']:.4f}" + (f": {q['summary']}" if q.get("summary") else "")
+        console.print(Panel(q["text"], title=f"[{q['id']}] {render.citation(q)}", subtitle=note,
+                            title_align="left", subtitle_align="left"))
 
 
 @cli.command()
@@ -172,14 +192,14 @@ def _search(conn, text, author, k=None):
     results = searcher.search(conn, text, k=k, author=author,
                                warn=lambda m: console.print(f"[yellow]{m}[/]"))
     if not results:
-        raise click.ClickException("No matching passages. Did you run ingest?")
+        raise click.ClickException("No matching quotes. Did you run ingest?")
     return results
 
 
 def _pick(conn, text, author) -> list[dict]:
-    passages = _search(conn, text, author)
+    candidates = _search(conn, text, author)
     with console.status(f"Asking {config.LLM_MODEL} to pick quotes"):
-        picks = picker.pick(text, passages)
+        picks = picker.pick(text, candidates)
     choices = []
     for p in picks:
         try:

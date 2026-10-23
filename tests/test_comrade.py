@@ -131,14 +131,23 @@ def test_fbis_wire_report_is_rejected():
     assert castro_db.parse_doc(summary)["paragraphs"] == []
 
 
-def test_long_picks_are_trimmed_or_dropped(monkeypatch):
+def test_candidates_follow_length_and_standalone_rules():
+    from comrade import quotes
+
+    sentences = ["Workers of the world, unite!", "This is why the bourgeoisie fears them.",
+                 "The history of all hitherto existing society is the history of class struggles.", "word " * 80 + "."]
+    passage = dict(PASSAGE, text=" ".join(sentences), sentences=sentences)
+    spans = [(s, e) for s, e, _ in quotes.candidates(passage)]
+    assert (0, 0) in spans and (0, 1) in spans and (0, 2) in spans
+    assert not any(s == 1 for s, _ in spans)  # opens with "This"
+    assert not any(e == 3 for _, e in spans)  # over 300 characters
+
+
+def test_picker_drops_unknown_and_repeated_ids(monkeypatch):
     from comrade import llm, picker
 
-    short, long_ = "Workers of the world, unite!", "word " * 80
-    sentences = [short, short, long_]
-    passage = dict(PASSAGE, id=7, text=" ".join(sentences), sentences=sentences)
-    picks = {"picks": [{"passage_id": 7, "start": 0, "end": 2, "reason": ""},
-                       {"passage_id": 7, "start": 2, "end": 2, "reason": ""}]}
-    monkeypatch.setattr(llm, "complete_json", lambda *a: picks)
-    result = picker.pick("target", [passage])
-    assert [(p["start"], p["end"]) for p in result] == [(0, 1)]
+    quote = {"id": 5, "passage": PASSAGE, "start": 0, "end": 0, "text": PASSAGE["text"],
+             "author": "Karl Marx", "title": "Theses on Feuerbach"}
+    picks = {"picks": [{"quote_id": 99, "reason": ""}, {"quote_id": 5, "reason": "a"}, {"quote_id": 5, "reason": "b"}]}
+    monkeypatch.setattr(llm, "complete_json", lambda *a, **k: picks)
+    assert [p["quote_id"] for p in picker.pick("target", [quote])] == [5]

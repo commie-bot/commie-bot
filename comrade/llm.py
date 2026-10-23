@@ -29,7 +29,7 @@ def parse_json(text: str) -> dict:
         raise LLMError(f"Invalid JSON from model: {e}") from e
 
 
-def _anthropic(system: str, user: str, schema: dict) -> dict:
+def _anthropic(system: str, user: str, schema: dict, effort: str = None) -> dict:
     import anthropic
 
     client = anthropic.Anthropic(api_key=config.LLM_API_KEY or None, base_url=config.LLM_BASE_URL or None)
@@ -40,7 +40,7 @@ def _anthropic(system: str, user: str, schema: dict) -> dict:
         fallbacks="default",
         system=system,
         messages=[{"role": "user", "content": user}],
-        output_config={"effort": "medium", "format": {"type": "json_schema", "schema": schema}},
+        output_config={"effort": effort or "medium", "format": {"type": "json_schema", "schema": schema}},
     )
     if response.stop_reason == "refusal":
         raise LLMError(f"Model declined the request: {response.stop_details}")
@@ -49,7 +49,7 @@ def _anthropic(system: str, user: str, schema: dict) -> dict:
     return parse_json(next(b.text for b in response.content if b.type == "text"))
 
 
-def _openai(system: str, user: str, schema: dict) -> dict:
+def _openai(system: str, user: str, schema: dict, effort: str = None) -> dict:
     import openai
 
     client = openai.OpenAI(
@@ -57,6 +57,8 @@ def _openai(system: str, user: str, schema: dict) -> dict:
         base_url=config.LLM_BASE_URL or None,
     )
     messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
+    # Reasoning models on Cerebras (gpt-oss) accept low, medium, or high
+    extra = {"reasoning_effort": effort} if effort and config.LLM_PROVIDER == "cerebras" else {}
     formats = [
         {"type": "json_schema", "json_schema": {"name": "result", "schema": schema, "strict": True}},
         {"type": "json_object"},  # for servers without json_schema support
@@ -64,7 +66,7 @@ def _openai(system: str, user: str, schema: dict) -> dict:
     for i, fmt in enumerate(formats):
         try:
             response = client.chat.completions.create(
-                model=config.LLM_MODEL, messages=messages, response_format=fmt, max_tokens=16000
+                model=config.LLM_MODEL, messages=messages, response_format=fmt, max_tokens=16000, **extra
             )
             break
         except openai.BadRequestError:
@@ -80,8 +82,9 @@ def _openai(system: str, user: str, schema: dict) -> dict:
 PROVIDERS = {"cerebras": _openai, "anthropic": _anthropic, "openai": _openai}
 
 
-def complete_json(system: str, user: str, schema: dict) -> dict:
+def complete_json(system: str, user: str, schema: dict, effort: str = None) -> dict:
+    """Return the model's JSON object. effort (low, medium, high) trades quality for speed where supported."""
     provider = PROVIDERS.get(config.LLM_PROVIDER)
     if not provider:
         raise LLMError(f"Unknown LLM_PROVIDER {config.LLM_PROVIDER!r}; use one of {', '.join(PROVIDERS)}")
-    return provider(system, user, schema)
+    return provider(system, user, schema, effort)

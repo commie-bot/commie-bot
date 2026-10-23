@@ -1,30 +1,23 @@
-"""Ask an LLM to pick the best sentence spans from retrieved passages.
+"""Ask an LLM to pick the best of the retrieved quotes.
 
-The model only returns passage IDs and sentence indexes. The quote text itself
-always comes from the database, so it can't be paraphrased or invented.
+The model only returns quote IDs. The quote text itself always comes from the
+database, so it can't be paraphrased or invented.
 """
 from xml.sax.saxutils import escape, quoteattr
 
 from comrade import llm
 from comrade import render
-from comrade.config import config
 
 SYSTEM = """You pick quotes for a Reddit bot that replies to posts and comments with \
 a quote from a socialist or communist writer.
 
-You get the target text and a list of candidate passages. Each passage has numbered \
-sentences, each with its length in characters. Choose up to 5 quotes that respond most directly and memorably to the \
-target text.
+You get the target text and a list of candidate quotes, each with an id, its \
+author and work, and sometimes a one-line summary of its point. Choose up to 3 \
+quotes that respond most directly and memorably to the target text.
 
 Rules:
-- A quote is a contiguous run of sentences from one passage: start and end are \
-inclusive sentence numbers. Use at most {max_span} sentences; 1 or 2 is better.
-- Keep each quote under {max_chars} characters. Skip long, winding sentences, \
-even good ones.
-- The quote must make sense on its own, without the surrounding passage. Avoid \
-quotes that open with an unresolved reference such as "This", "He", or "Thus".
-- Never pick sentences inside quotation marks or that the author is quoting \
-from another writer. The quote must be the author's own words.
+- Pick a quote only if it answers what the target text says or argues. Sharing \
+words with the target isn't enough.
 - Prefer sharp, quotable lines over dense theory.
 - Rank the best pick first. Use different authors or works across picks when the \
 quality is similar.
@@ -37,13 +30,8 @@ SCHEMA = {
             "type": "array",
             "items": {
                 "type": "object",
-                "properties": {
-                    "passage_id": {"type": "integer"},
-                    "start": {"type": "integer"},
-                    "end": {"type": "integer"},
-                    "reason": {"type": "string"},
-                },
-                "required": ["passage_id", "start", "end", "reason"],
+                "properties": {"quote_id": {"type": "integer"}, "reason": {"type": "string"}},
+                "required": ["quote_id", "reason"],
                 "additionalProperties": False,
             },
         }
@@ -64,34 +52,35 @@ def format_candidates(passages: list[dict]) -> str:
     return "\n\n".join(blocks)
 
 
-def _length(passage: dict, start: int, end: int) -> int:
-    return len(" ".join(passage["sentences"][start:end + 1]))
+def format_quotes(quotes: list[dict]) -> str:
+    blocks = []
+    for q in quotes:
+        attrs = f'id="{q["id"]}" author={quoteattr(q["author"])} work={quoteattr(q["title"])}'
+        if q.get("year"):
+            attrs += f' year="{q["year"]}"'
+        summary = f"\n<summary>{escape(q['summary'])}</summary>" if q.get("summary") else ""
+        blocks.append(f"<quote {attrs}>\n{escape(q['text'])}{summary}\n</quote>")
+    return "\n\n".join(blocks)
 
 
-def pick(target_text: str, passages: list[dict]) -> list[dict]:
-    """Return validated picks: [{passage, start, end, reason}], best first."""
-    by_id = {p["id"]: p for p in passages}
+def pick(target_text: str, quotes: list[dict]) -> list[dict]:
+    """Return validated picks from search results: [{passage, start, end, reason}], best first."""
+    by_id = {q["id"]: q for q in quotes}
     user = (
         f"<target>\n{escape(target_text)}\n</target>\n\n"
-        f"<candidates>\n{format_candidates(passages)}\n</candidates>"
+        f"<candidates>\n{format_quotes(quotes)}\n</candidates>"
     )
-    result = llm.complete_json(SYSTEM.format(max_span=config.MAX_SPAN, max_chars=config.MAX_QUOTE_CHARS), user, SCHEMA)
+    result = llm.complete_json(SYSTEM, user, SCHEMA)
 
     picks = []
     for raw in result.get("picks", []):
-        p = by_id.get(raw.get("passage_id"))
-        start, end = raw.get("start"), raw.get("end")
-        if not p or not isinstance(start, int) or not isinstance(end, int) \
-                or not (0 <= start <= end < len(p["sentences"])):
-            continue  # hallucinated id or out-of-range span
-        end = min(end, start + config.MAX_SPAN - 1)
-        while end > start and _length(p, start, end) > config.MAX_QUOTE_CHARS:
-            end -= 1  # drop trailing sentences until the quote fits
-        if _length(p, start, end) > config.MAX_QUOTE_CHARS:
-            continue  # a single sentence that is too long
+        q = by_id.get(raw.get("quote_id"))
+        if not q or any(p["quote_id"] == q["id"] for p in picks):
+            continue  # hallucinated or repeated id
         try:
-            render.quote_text(p, start, end)
+            render.quote_text(q["passage"], q["start"], q["end"])
         except render.Rejected:
-            continue  # not verbatim, or another writer's words
-        picks.append({"passage": p, "start": start, "end": end, "reason": raw.get("reason", "")})
-    return picks[:3]  # the model returns extras so that rejected picks don't leave too few
+            continue
+        picks.append({"quote_id": q["id"], "passage": q["passage"], "start": q["start"], "end": q["end"],
+                      "reason": raw.get("reason", "")})
+    return picks[:3]
