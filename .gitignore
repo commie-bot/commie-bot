@@ -1,10 +1,10 @@
 .env
-texts/
+texts/*
+!texts/public/
 *.db
 __pycache__/
 .venv/
 fetch.log
 embed.log
-castro-db.yaml
 castro.log
 library.yaml

@@ -66,6 +66,8 @@ To add another provider, write a function in `llm.py` that takes a system prompt
 
    The command keeps only documents that FBIS marks as speeches. It drops wire reports and editorial summaries, which paraphrase Castro, and speeches that `works.yaml` already has from marxists.org. It also removes FBIS insertions such as "(applause)". The results go to `castro-db.yaml`, which `works.yaml` includes.
 
+   The FBIS translations are U.S. government works in the public domain, so the repo already includes them in `texts/public/castro-db/`. You need this command only to download them again.
+
 5. Optional: transcribe the Malcolm X recordings from the [Marxists Internet Archive](https://www.marxists.org/reference/archive/malcolm-x/index.htm). `transcribe.py` runs [faster-whisper](https://github.com/SYSTRAN/faster-whisper) and needs a CUDA GPU. Download the MP3 files, then run:
 
    ```bash
@@ -86,7 +88,15 @@ To add another provider, write a function in `llm.py` that takes a system prompt
 
    Ingest also leaves out block quotes and epigraphs, because they quote other writers.
 
-Texts aren't included in this repo. Check each source's terms before you redistribute them.
+### Where texts live
+
+| Folder | In git | Contents |
+| --- | --- | --- |
+| `texts/public/` | Yes | Public domain texts only, such as the FBIS Castro speeches. |
+| `texts/library/` | No | Your own copies of books, listed in `library.yaml`. |
+| `texts/` (everything else) | No | Works that `fetch` downloads from marxists.org. Their licenses vary, so the repo doesn't redistribute them. |
+
+Add a text to `texts/public/` only if it's in the public domain. Never commit `texts/library/` or `library.yaml`.
 
 ## Usage
 

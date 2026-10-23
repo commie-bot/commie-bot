@@ -23,7 +23,7 @@ from fetch import DELAY, USER_AGENT
 ARCHIVE = "https://web.archive.org/web/2019{flag}/http://lanic.utexas.edu/project/castro/"
 YEARS = range(1959, 1997)
 WORKS_FILE = "castro-db.yaml"
-SUBDIR = "castro-db"
+SUBDIR = "public/castro-db"
 TRANSLATOR = "Foreign Broadcast Information Service"
 
 TEXT_MARKER = re.compile(r"^\((Text|Excerpts)\)\s*", re.I)
