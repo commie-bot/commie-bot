@@ -117,8 +117,8 @@ def handle_search(body):
 
 
 def handle_pick(body):
-    if config.LLM_PROVIDER == "anthropic" and not (config.LLM_API_KEY or os.getenv("ANTHROPIC_API_KEY")):
-        raise RuntimeError("No API key. Set LLM_API_KEY in .env, or set LLM_PROVIDER=openai with a local LLM_BASE_URL.")
+    if config.LLM_PROVIDER in ("cerebras", "anthropic") and not (config.LLM_API_KEY or os.getenv("ANTHROPIC_API_KEY")):
+        raise RuntimeError(f"No API key for {config.LLM_PROVIDER}. Set LLM_API_KEY in .env, then restart the page.")
     conn, warnings = db.connect(), []
     passages = _search(conn, {**body, "k": None}, warnings)  # the picker sees config.CANDIDATES passages
     results = []

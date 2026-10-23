@@ -1,6 +1,7 @@
 """Pluggable LLM backends that return a JSON object matching a schema.
 
-Two providers cover most models:
+Three providers:
+- cerebras (default): Cerebras Inference, through its OpenAI-compatible API.
 - anthropic: Claude through the Anthropic API.
 - openai: any OpenAI-compatible chat completions API (OpenAI, Ollama,
   OpenRouter, Groq, Together, vLLM, LM Studio, llama.cpp server, and others).
@@ -76,7 +77,7 @@ def _openai(system: str, user: str, schema: dict) -> dict:
     return parse_json(choice.message.content or "")
 
 
-PROVIDERS = {"anthropic": _anthropic, "openai": _openai}
+PROVIDERS = {"cerebras": _openai, "anthropic": _anthropic, "openai": _openai}
 
 
 def complete_json(system: str, user: str, schema: dict) -> dict:

@@ -6,16 +6,20 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(os.path.join(BASE_DIR, ".env"))
 
 
+DEFAULT_MODELS = {"cerebras": "gpt-oss-120b", "anthropic": "claude-sonnet-5-5"}
+DEFAULT_BASE_URLS = {"cerebras": "https://api.cerebras.ai/v1"}
+
+
 @dataclass
 class Config:
     DB_PATH: str = os.getenv("COMRADE_DB", os.path.join(BASE_DIR, "comrade.db"))
     WORKS_FILE: str = os.getenv("COMRADE_WORKS", os.path.join(BASE_DIR, "works.yaml"))
     TEXTS_DIR: str = os.getenv("COMRADE_TEXTS", os.path.join(BASE_DIR, "texts"))
 
-    # LLM (quote selection). Provider is "anthropic" or "openai" (any OpenAI-compatible API).
-    LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "anthropic")
-    LLM_MODEL: str = os.getenv("LLM_MODEL", "claude-sonnet-5-5")
-    LLM_BASE_URL: str = os.getenv("LLM_BASE_URL", "")
+    # LLM (quote selection). Provider is "cerebras", "anthropic", or "openai" (any OpenAI-compatible API).
+    LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "cerebras")
+    LLM_MODEL: str = os.getenv("LLM_MODEL") or DEFAULT_MODELS.get(LLM_PROVIDER, "")
+    LLM_BASE_URL: str = os.getenv("LLM_BASE_URL") or DEFAULT_BASE_URLS.get(LLM_PROVIDER, "")
     LLM_API_KEY: str = os.getenv("LLM_API_KEY", "")
 
     # Ollama (embeddings)

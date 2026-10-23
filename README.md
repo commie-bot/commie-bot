@@ -14,14 +14,16 @@ Because the model never writes quote text, every quote is verbatim.
 
 ## Choose an LLM
 
-Set `LLM_PROVIDER`, `LLM_MODEL`, and optionally `LLM_API_KEY` and `LLM_BASE_URL` in `.env`. Two providers are available:
+Set `LLM_PROVIDER`, `LLM_API_KEY`, and optionally `LLM_MODEL` and `LLM_BASE_URL` in `.env`. Three providers are available:
 
+- `cerebras` (default): [Cerebras Inference](https://cloud.cerebras.ai). It's fast, and the default model is `gpt-oss-120b`.
 - `anthropic`: Claude models through the Anthropic API.
 - `openai`: any OpenAI-compatible chat completions API, such as OpenAI, Ollama, OpenRouter, Groq, vLLM, or LM Studio. To use a server other than OpenAI, set `LLM_BASE_URL`.
 
 | Setup | `LLM_PROVIDER` | `LLM_MODEL` | `LLM_BASE_URL` |
 | --- | --- | --- | --- |
-| Claude | `anthropic` | `claude-sonnet-5-5` | |
+| Cerebras | `cerebras` | `gpt-oss-120b` (default) or `qwen-3.8-27b` | |
+| Claude | `anthropic` | `claude-sonnet-5-5` (default) | |
 | OpenAI | `openai` | `gpt-5` | |
 | Local Ollama | `openai` | `qwen3:8b` | `http://localhost:11434/v1` |
 | OpenRouter | `openai` | any model ID | `https://openrouter.ai/api/v1` |
