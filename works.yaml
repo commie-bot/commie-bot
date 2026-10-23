@@ -13,6 +13,9 @@
 #
 # To add a work you already have as a file, leave out url and set file.
 
+include:
+  - castro-db.yaml  # written by `python main.py fetch-castro`
+
 works:
   # Karl Marx and Friedrich Engels
   - id: communist-manifesto
@@ -289,6 +292,7 @@ works:
     year: 1953
     type: speech
     url: https://www.marxists.org/history/cuba/archive/castro/1953/10/16.htm
+    date: '19531016'
 
   - id: castro-un-1960
     author: Fidel Castro
@@ -296,6 +300,7 @@ works:
     year: 1960
     type: speech
     url: https://www.marxists.org/history/cuba/archive/castro/1960/09/26.htm
+    date: '19600926'
 
   - id: castro-may-day-1961
     author: Fidel Castro
@@ -303,6 +308,7 @@ works:
     year: 1961
     type: speech
     url: https://www.marxists.org/history/cuba/archive/castro/1961/05/01.htm
+    date: '19610501'
 
   - id: castro-marxism-leninism
     author: Fidel Castro
@@ -310,6 +316,183 @@ works:
     year: 1961
     type: speech
     url: https://www.marxists.org/history/cuba/archive/castro/1961/12/02.htm
+    date: '19611202'
+
+  - id: castro-moncada-1953
+    author: Fidel Castro
+    title: "Speech before Leaving for the Moncada Barracks"
+    year: 1953
+    type: speech
+    url: https://www.marxists.org/history/cuba/archive/castro/1953/07/26-july-1953.htm
+    date: '19530726'
+
+  - id: castro-revolution-begins-now
+    author: Fidel Castro
+    title: "The Revolution Begins Now"
+    year: 1959
+    type: speech
+    url: https://www.marxists.org/history/cuba/archive/castro/1959/01/03.htm
+    date: '19590103'
+
+  - id: castro-when-the-people-rule
+    author: Fidel Castro
+    title: "When the People Rule"
+    year: 1959
+    type: speech
+    url: https://www.marxists.org/history/cuba/archive/castro/1959/01/21.htm
+    date: '19590121'
+
+  - id: castro-agrarian-law
+    author: Fidel Castro
+    title: "On the Promulgation of the Agrarian Law"
+    year: 1959
+    type: speech
+    url: https://www.marxists.org/history/cuba/archive/castro/1959/05/17.htm
+    date: '19590517'
+
+  - id: castro-la-coubre
+    author: Fidel Castro
+    title: "Funeral of the Victims of the La Coubre Explosion"
+    year: 1960
+    type: speech
+    url: https://www.marxists.org/history/cuba/archive/castro/1960/03/05-mar-1960.htm
+    date: '19600305'
+
+  - id: castro-facing-us-aggressions
+    author: Fidel Castro
+    title: "Facing U.S. Aggressions"
+    year: 1960
+    type: speech
+    url: https://www.marxists.org/history/cuba/archive/castro/1960/07/09.htm
+    date: '19600709'
+
+  - id: castro-revolutionary-vigilance
+    author: Fidel Castro
+    title: "Establishing Revolutionary Vigilance in Cuba"
+    year: 1960
+    type: speech
+    url: https://www.marxists.org/history/cuba/archive/castro/1960/09/29.htm
+    date: '19600929'
+
+  - id: castro-nature-of-cuban-socialism
+    author: Fidel Castro
+    title: "The Nature of Cuban Socialism"
+    year: 1961
+    type: speech
+    url: https://www.marxists.org/history/cuba/archive/castro/1961/02/01.htm
+    date: '19610201'
+
+  - id: castro-bay-of-pigs
+    author: Fidel Castro
+    title: "Denouncing U.S. Bay of Pigs Invasion"
+    year: 1961
+    type: speech
+    url: https://www.marxists.org/history/cuba/archive/castro/1961/04/23.htm
+    date: '19610423'
+
+  - id: castro-bureaucracy-sectarianism
+    author: Fidel Castro
+    title: "Against Bureaucracy and Sectarianism"
+    year: 1962
+    type: speech
+    url: https://www.marxists.org/history/cuba/archive/castro/1962/03/26.htm
+    date: '19620326'
+
+  - id: castro-un-demands
+    author: Fidel Castro
+    title: "On the U.N. Demands of Cuba"
+    year: 1962
+    type: speech
+    url: https://www.marxists.org/history/cuba/archive/castro/1962/11/02.htm
+    date: '19621102'
+
+  - id: castro-fourth-anniversary
+    author: Fidel Castro
+    title: "Fourth Anniversary of the Cuban Revolution"
+    year: 1963
+    type: speech
+    url: https://www.marxists.org/history/cuba/archive/castro/1963/01/02.htm
+    date: '19630102'
+
+  - id: castro-congress-of-women
+    author: Fidel Castro
+    title: "At the Closing of the Congress of Women of the Americas"
+    year: 1963
+    type: speech
+    url: https://www.marxists.org/history/cuba/archive/castro/1963/01/16.htm
+    date: '19630116'
+
+  - id: castro-central-committee-1965
+    author: Fidel Castro
+    title: "Presentation of the Central Committee of the Communist Party of Cuba"
+    year: 1965
+    type: speech
+    url: https://www.marxists.org/history/cuba/archive/castro/1965/10/03-oct-1965.htm
+    date: '19651003'
+
+  - id: castro-tricontinental
+    author: Fidel Castro
+    title: "At the Closing Session of the Tricontinental Conference"
+    year: 1966
+    type: speech
+    url: https://www.marxists.org/history/cuba/archive/castro/1966/01/15.htm
+    date: '19660115'
+
+  - id: castro-olas
+    author: Fidel Castro
+    title: "Speech to the OLAS Conference"
+    year: 1967
+    type: speech
+    url: https://www.marxists.org/history/cuba/archive/castro/1967/08/10.htm
+    date: '19670810'
+
+  - id: castro-tribute-to-che
+    author: Fidel Castro
+    title: "In Tribute to Che Guevara"
+    year: 1967
+    type: speech
+    url: https://www.marxists.org/history/cuba/archive/castro/1967/10/oct-18-1967.htm
+    date: '19671018'
+
+  - id: castro-czechoslovakia
+    author: Fidel Castro
+    title: "Comments on Czechoslovakia"
+    year: 1968
+    type: speech
+    url: https://www.marxists.org/history/cuba/archive/castro/1968/08/24.htm
+    date: '19680824'
+
+  - id: castro-grenada
+    author: Fidel Castro
+    title: "The Bells Tolling Today for Grenada May Toll Tomorrow for the Whole World"
+    year: 1983
+    type: speech
+    url: https://www.marxists.org/history/cuba/archive/castro/1983/11/grenada.htm
+    date: '19831114'
+
+  - id: castro-che-ideas-relevant
+    author: Fidel Castro
+    title: "Che's Ideas Are Absolutely Relevant Today"
+    year: 1987
+    type: speech
+    url: https://www.marxists.org/history/cuba/archive/castro/1987/10/08.htm
+    date: '19871008'
+
+  - id: castro-blaming-stalin
+    author: Fidel Castro
+    title: "Blaming Stalin for Everything Would Be Historical Simplism"
+    year: 1992
+    type: speech
+    url: https://www.marxists.org/history/cuba/archive/castro/1992/06/03.htm
+    date: '19920603'
+
+  - id: castro-cubas-achievements
+    author: Fidel Castro
+    title: "Cuba's Achievements and America's Wars"
+    year: 2003
+    type: speech
+    url: https://www.marxists.org/history/cuba/archive/castro/2003/05/01.htm
+    date: '20030501'
 
   # Che Guevara
   - id: socialism-and-man
@@ -325,6 +508,387 @@ works:
     year: 1967
     type: article
     url: https://www.marxists.org/archive/guevara/1967/04/16.htm
+
+  - id: che-reminiscences
+    author: Che Guevara
+    title: "Reminiscences of the Cuban Revolutionary War"
+    year: 1963
+    type: book
+    url: https://www.marxists.org/archive/guevara/1963/reminiscences/index.htm
+
+  - id: che-political-sovereignty
+    author: Che Guevara
+    title: "Political Sovereignty and Economic Independence"
+    year: 1960
+    type: speech
+    url: https://www.marxists.org/archive/guevara/1960/03/20.htm
+
+  - id: che-latin-american-youth
+    author: Che Guevara
+    title: "Speech to the First Latin American Youth Congress"
+    year: 1960
+    type: speech
+    url: https://www.marxists.org/archive/guevara/1960/07/28.htm
+
+  - id: che-revolutionary-medicine
+    author: Che Guevara
+    title: "On Revolutionary Medicine"
+    year: 1960
+    type: speech
+    url: https://www.marxists.org/archive/guevara/1960/08/19.htm
+
+  - id: che-ideology-cuban-revolution
+    author: Che Guevara
+    title: "Notes for the Study of the Ideology of the Cuban Revolution"
+    year: 1960
+    type: article
+    url: https://www.marxists.org/archive/guevara/1960/10/08.htm
+
+  - id: che-mobilising-the-masses
+    author: Che Guevara
+    title: "Mobilising the Masses for the Invasion"
+    year: 1961
+    type: speech
+    url: https://www.marxists.org/archive/guevara/1961/03/28.htm
+
+  - id: che-exception-or-vanguard
+    author: Che Guevara
+    title: "Cuba: Historical Exception or Vanguard in the Anticolonial Struggle?"
+    year: 1961
+    type: article
+    url: https://www.marxists.org/archive/guevara/1961/04/09.htm
+
+  - id: che-economics-and-politics
+    author: Che Guevara
+    title: "Economics Cannot Be Separated from Politics"
+    year: 1961
+    type: speech
+    url: https://www.marxists.org/archive/guevara/1961/08/08.htm
+
+  - id: che-cadres
+    author: Che Guevara
+    title: "The Cadres: Backbone of the Revolution"
+    year: 1962
+    type: article
+    url: https://www.marxists.org/archive/guevara/1962/09/misc/x01.htm
+
+  - id: che-against-bureaucratism
+    author: Che Guevara
+    title: "Against Bureaucratism"
+    year: 1963
+    type: article
+    url: https://www.marxists.org/archive/guevara/1963/02/against-bureaucratism.htm
+
+  - id: che-guerrilla-warfare-method
+    author: Che Guevara
+    title: "Guerrilla Warfare: A Method"
+    year: 1963
+    type: article
+    url: https://www.marxists.org/archive/guevara/1963/09/guerrilla-warfare.htm
+
+  - id: che-on-development
+    author: Che Guevara
+    title: "On Development"
+    year: 1964
+    type: speech
+    url: https://www.marxists.org/archive/guevara/1964/03/25.htm
+
+  - id: che-at-the-un
+    author: Che Guevara
+    title: "At the United Nations"
+    year: 1964
+    type: speech
+    url: https://www.marxists.org/archive/guevara/1964/12/11.htm
+
+  - id: che-afro-asian-conference
+    author: Che Guevara
+    title: "At the Afro-Asian Conference in Algeria"
+    year: 1965
+    type: speech
+    url: https://www.marxists.org/archive/guevara/1965/02/24.htm
+
+  - id: che-farewell-letter
+    author: Che Guevara
+    title: "Farewell Letter to Fidel Castro"
+    year: 1965
+    type: letter
+    url: https://www.marxists.org/archive/guevara/1965/04/01.htm
+
+  # Michael Parenti
+  - id: parenti-bogey-of-revolution
+    author: Michael Parenti
+    title: "The Bogey of the Revolution"
+    year: 1968
+    type: article
+    url: https://www.marxists.org/archive/parenti/1968/bogey-of-revolution.htm
+
+  - id: parenti-high-cost-of-empire
+    author: Michael Parenti
+    title: "The High Cost of Empire"
+    year: 1981
+    type: article
+    url: https://www.marxists.org/archive/parenti/1981/high-cost-of-empire.htm
+
+  - id: parenti-nicaragua
+    author: Michael Parenti
+    title: "Is Nicaragua More Democratic Than the United States?"
+    year: 1986
+    type: article
+    url: https://www.marxists.org/archive/parenti/1986/nicaragua.htm
+
+  - id: parenti-dividends-are-not-royalties
+    author: Michael Parenti
+    title: "Dividends Are Not Royalties: The SAT and Surplus Value"
+    year: 1993
+    type: article
+    url: https://www.marxists.org/archive/parenti/1993/dividends-are-not-royalties.htm
+
+  - id: parenti-imperialism-101
+    author: Michael Parenti
+    title: "Imperialism 101"
+    year: 1995
+    type: article
+    url: https://www.marxists.org/archive/parenti/1995/Imperialism-101.htm
+
+  - id: parenti-hidden-holocaust-usa
+    author: Michael Parenti
+    title: "Hidden Holocaust, USA"
+    year: 1996
+    type: article
+    url: https://www.marxists.org/archive/parenti/1996/hidden-holocaust-usa.htm
+
+  - id: parenti-free-speech-at-a-price
+    author: Michael Parenti
+    title: "Free Speech: At a Price"
+    year: 1996
+    type: article
+    url: https://www.marxists.org/archive/parenti/1996/free-speech-at-a-price.htm
+
+  - id: parenti-rational-fascism
+    author: Michael Parenti
+    title: "Rational Fascism"
+    year: 1997
+    type: article
+    url: https://www.marxists.org/archive/parenti/1997/rational-fascism.htm
+
+  - id: parenti-super-rich-out-of-sight
+    author: Michael Parenti
+    title: "The Super Rich Are Out of Sight"
+    year: 2000
+    type: article
+    url: https://www.marxists.org/archive/parenti/2000/super-rich-out-of-sight.htm
+
+  - id: parenti-media-and-atrocities
+    author: Michael Parenti
+    title: "The Media and Their Atrocities"
+    year: 2000
+    type: article
+    url: https://www.marxists.org/archive/parenti/2000/media-and-atrocities.htm
+
+  - id: parenti-monopoly-media-manipulation
+    author: Michael Parenti
+    title: "Monopoly Media Manipulation"
+    year: 2001
+    type: article
+    url: https://www.marxists.org/archive/parenti/2001/monopoly-media-manipulation.htm
+
+  - id: parenti-global-rollback
+    author: Michael Parenti
+    title: "Global Rollback After Communism"
+    year: 2002
+    type: article
+    url: https://www.marxists.org/archive/parenti/2002/global-rollback.htm
+
+  - id: parenti-empires-old-and-new
+    author: Michael Parenti
+    title: "Empires, Old and New"
+    year: 2004
+    type: article
+    url: https://www.marxists.org/archive/parenti/2004/empires-old-and-new.htm
+
+  - id: parenti-reactionary-era
+    author: Michael Parenti
+    title: "In the Reactionary Era of \"No Alternative\""
+    year: 2005
+    type: article
+    url: https://www.marxists.org/archive/parenti/2005/reactionary-era.htm
+
+  - id: parenti-free-market-killed-new-orleans
+    author: Michael Parenti
+    title: "How the Free Market Killed New Orleans"
+    year: 2005
+    type: article
+    url: https://www.marxists.org/archive/parenti/2005/free-market-killed-new-orleans.htm
+
+  - id: parenti-government-by-giveaway
+    author: Michael Parenti
+    title: "Government by Giveaway"
+    year: 2005
+    type: article
+    url: https://www.marxists.org/archive/parenti/2005/government-by-giveaway.htm
+
+  - id: parenti-still-soft-on-corporate-crime
+    author: Michael Parenti
+    title: "Still Soft on (Corporate) Crime"
+    year: 2006
+    type: article
+    url: https://www.marxists.org/archive/parenti/2006/still-soft-on-corporate-crime.htm
+
+  - id: parenti-wealth-creates-poverty
+    author: Michael Parenti
+    title: "Mystery: How Wealth Creates Poverty in the World"
+    year: 2006
+    type: article
+    url: https://www.marxists.org/archive/parenti/2006/wealth-creates-poverty.htm
+
+  - id: parenti-the-tibet-myth
+    author: Michael Parenti
+    title: "Friendly Feudalism: The Tibet Myth"
+    year: 2007
+    type: article
+    url: https://www.marxists.org/archive/parenti/2007/the-tibet-myth.htm
+
+  - id: parenti-self-inflicted-apocalypse
+    author: Michael Parenti
+    title: "Capitalism's Self-Inflicted Apocalypse"
+    year: 2009
+    type: article
+    url: https://www.marxists.org/archive/parenti/2009/self-inflicted-apocalypse.htm
+
+  - id: parenti-what-do-empires-do
+    author: Michael Parenti
+    title: "What Do Empires Do?"
+    year: 2010
+    type: article
+    url: https://www.marxists.org/archive/parenti/2010/what-do-empires-do.htm
+
+  - id: parenti-money-name-of-the-game
+    author: Michael Parenti
+    title: "Money Is Still the Name of the Game"
+    year: 2010
+    type: article
+    url: https://www.marxists.org/archive/parenti/2010/money-name-of-the-game.htm
+
+  - id: parenti-profit-pathology
+    author: Michael Parenti
+    title: "Profit Pathology and Disposable Planet"
+    year: 2011
+    type: article
+    url: https://www.marxists.org/archive/parenti/2011/profit-pathology.htm
+
+  - id: parenti-class-warfare-indeed
+    author: Michael Parenti
+    title: "Class Warfare Indeed"
+    year: 2011
+    type: article
+    url: https://www.marxists.org/archive/parenti/2011/class-warfare-indeed.htm
+
+  - id: parenti-occupy-america
+    author: Michael Parenti
+    title: "Occupy America"
+    year: 2011
+    type: article
+    url: https://www.marxists.org/archive/parenti/2011/occupy-america.htm
+
+  - id: parenti-free-market-medicine
+    author: Michael Parenti
+    title: "Free-Market Medicine: A Personal Account"
+    year: 2011
+    type: article
+    url: https://www.marxists.org/archive/parenti/2011/free-market-medicine.htm
+
+  - id: parenti-must-we-adore-vaclav-havel
+    author: Michael Parenti
+    title: "Must We Adore Vaclav Havel?"
+    year: 2011
+    type: article
+    url: https://www.marxists.org/archive/parenti/2011/must-we-adore-vaclav-havel.htm
+
+  - id: parenti-terrible-normality
+    author: Michael Parenti
+    title: "A Terrible Normality"
+    year: 2013
+    type: article
+    url: https://www.marxists.org/archive/parenti/2013/terrible-normality.htm
+
+  - id: parenti-whats-a-slum
+    author: Michael Parenti
+    title: "What's a Slum?"
+    year: 2014
+    type: article
+    url: https://www.marxists.org/archive/parenti/2014/whats-a-slum.htm
+
+  - id: parenti-long-time-for-killing
+    author: Michael Parenti
+    title: "A Long Time for Killing"
+    year: 2015
+    type: article
+    url: https://www.marxists.org/archive/parenti/2015/long-time-for-killing.htm
+
+  # Malcolm X
+  - id: malcolm-x-afro-american-history
+    author: Malcolm X
+    title: "Afro-American History"
+    year: 1965
+    type: speech
+    url: https://www.marxists.org/reference/archive/malcolm-x/1965/01/afro-amer.html
+
+  - id: malcolm-x-ballot-or-the-bullet
+    author: Malcolm X
+    title: "The Ballot or the Bullet"
+    year: 1964
+    type: speech
+    file: malcolm-x/ballot-or-the-bullet.txt  # transcribed with transcribe.py
+    source_url: https://www.marxists.org/reference/archive/malcolm-x/1964/04/12.mp3
+
+  - id: malcolm-x-the-dixicrats
+    author: Malcolm X
+    title: "The Democrats Are Dixiecrats"
+    type: speech
+    file: malcolm-x/the-dixicrats.txt  # transcribed with transcribe.py
+    source_url: https://www.marxists.org/reference/archive/malcolm-x/the-dixicrats.mp3
+
+  - id: malcolm-x-racist-in-reverse
+    author: Malcolm X
+    title: "Racist in Reverse?"
+    type: speech
+    file: malcolm-x/racist-in-reverse.txt  # transcribed with transcribe.py
+    source_url: https://www.marxists.org/reference/archive/malcolm-x/racist-in-reverse.mp3
+
+  - id: malcolm-x-we-have-no-freedom
+    author: Malcolm X
+    title: "We Have No Freedom"
+    type: speech
+    file: malcolm-x/we-have-no-freedom.txt  # transcribed with transcribe.py
+    source_url: https://www.marxists.org/reference/archive/malcolm-x/we-have-no-freedom.mp3
+
+  - id: malcolm-x-whites-disease
+    author: Malcolm X
+    title: "White Society's Disease"
+    type: speech
+    file: malcolm-x/whites-disease.txt  # transcribed with transcribe.py
+    source_url: https://www.marxists.org/reference/archive/malcolm-x/whites-disease.mp3
+
+  - id: malcolm-x-revolution-bloodshed
+    author: Malcolm X
+    title: "Revolution and Bloodshed"
+    type: speech
+    file: malcolm-x/revolution-bloodshed.txt  # transcribed with transcribe.py
+    source_url: https://www.marxists.org/reference/archive/malcolm-x/revolution-bloodshed.mp3
+
+  - id: malcolm-x-end-police-brutality
+    author: Malcolm X
+    title: "End Police Brutality"
+    type: speech
+    file: malcolm-x/end-police-brutality.txt  # transcribed with transcribe.py
+    source_url: https://www.marxists.org/reference/archive/malcolm-x/end-police-brutality.mp3
+
+  - id: malcolm-x-dont-sit-in-stand-up
+    author: Malcolm X
+    title: "Don't Sit In, Stand Up"
+    type: speech
+    file: malcolm-x/dont-sit-in-stand-up.txt  # transcribed with transcribe.py
+    source_url: https://www.marxists.org/reference/archive/malcolm-x/dont-sit-in-stand-up.mp3
 
   # Eugene V. Debs
   - id: debs-statement-to-court

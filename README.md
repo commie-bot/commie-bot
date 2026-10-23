@@ -49,13 +49,30 @@ To add another provider, write a function in `llm.py` that takes a system prompt
    ssh -N -L 11434:127.0.0.1:11434 user@your-server
    ```
 
-3. Download the starter corpus. `works.yaml` lists about 45 public works by Marx, Engels, Lenin, Stalin, Luxemburg, Mao, Ho Chi Minh, Castro, Guevara, and Debs, all from the [Marxists Internet Archive](https://www.marxists.org/):
+3. Download the starter corpus. `works.yaml` lists about 120 public works by Marx, Engels, Lenin, Stalin, Luxemburg, Mao, Ho Chi Minh, Castro, Guevara, Parenti, Malcolm X, and Debs, all from the [Marxists Internet Archive](https://www.marxists.org/):
 
    ```bash
    python main.py fetch
    ```
 
    The fetcher sends one request per second. For multi-page works, it follows the chapter links on the index page and saves each work as one UTF-8 HTML file in `texts/`.
+
+4. Optional: download about 1,000 more Castro speeches from the [Castro Speech Database](https://web.archive.org/web/2019/http://lanic.utexas.edu/la/cb/cuba/castro.html), 1959 to 1996. The translations are by the U.S. Foreign Broadcast Information Service (FBIS). The command reads the Internet Archive's copy, so a full run takes a few hours. It saves progress after each speech, so you can stop and restart it.
+
+   ```bash
+   python main.py fetch-castro              # all years
+   python main.py fetch-castro --year 1962  # one year
+   ```
+
+   The command keeps only documents that FBIS marks as speeches. It drops wire reports and editorial summaries, which paraphrase Castro, and speeches that `works.yaml` already has from marxists.org. It also removes FBIS insertions such as "(applause)". The results go to `castro-db.yaml`, which `works.yaml` includes.
+
+5. Optional: transcribe the Malcolm X recordings from the [Marxists Internet Archive](https://www.marxists.org/reference/archive/malcolm-x/index.htm). `transcribe.py` runs [faster-whisper](https://github.com/SYSTRAN/faster-whisper) and needs a CUDA GPU. Download the MP3 files, then run:
+
+   ```bash
+   python transcribe.py *.mp3 --out texts/malcolm-x
+   ```
+
+   Name each MP3 file after the `file` entry in `works.yaml`, such as `ballot-or-the-bullet.mp3`. Machine transcripts can contain errors, so check a quote against the recording before you post it.
 
    To add a work, add an entry to `works.yaml`. Use `url` to download it, or put your own file in `texts/` and set `file`. Supported formats: HTML, EPUB, PDF, and TXT.
 
