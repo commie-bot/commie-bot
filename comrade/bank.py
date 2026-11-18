@@ -21,6 +21,7 @@ from comrade import embed
 from comrade import llm
 from comrade import quotes
 from comrade import render
+from comrade import speakers
 from comrade.config import config
 from comrade.tags import TAGS
 
@@ -214,8 +215,10 @@ def materialize(conn, hashes: list[str] = None) -> int:
         if fragment(text):
             continue
         own, speaker = attributed.get(quotes.text_hash(text), (1, ""))
-        if not own and not speaker:
-            continue  # someone else's words, and we don't know whose
+        if not own:
+            speaker = speakers.canonical(speaker)
+            if not speaker or speaker == p["author"]:
+                continue  # an opponent's or unknown speaker's words; see comrade/speakers.py
         cur = conn.execute(
             """INSERT INTO bank (source_hash, paragraph_id, start, end, text, rating, summary, speaker)
                VALUES (?,?,?,?,?,?,?,?)""",

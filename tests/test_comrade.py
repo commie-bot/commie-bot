@@ -183,3 +183,14 @@ def test_picker_sorts_by_score_and_clamps(monkeypatch):
     ]})
     picks = picker.pick("text", quotes_)
     assert [(p["quote_id"], p["score"]) for p in picks] == [(2, 1.0), (1, 0.4), (3, 0.0)]
+
+
+def test_only_listed_speakers_are_credited():
+    from comrade import speakers
+
+    assert speakers.canonical("Lenin") == "Vladimir Lenin"
+    assert speakers.canonical("W. E. B. DuBois") == "W. E. B. Du Bois"
+    assert speakers.canonical("Dr. N'Krumah") == "Kwame Nkrumah"
+    assert speakers.canonical("Marti") == "José Martí"
+    for name in ("Adam Smith", "Ronald Reagan", "The New York Times", "they", ""):
+        assert speakers.canonical(name) is None
