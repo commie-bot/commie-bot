@@ -45,6 +45,7 @@ PAGE = """<!doctype html>
   .text { white-space: pre-wrap; }
   details summary { cursor: pointer; color: var(--muted); font-size: 13px; margin-top: 8px; }
   .jobs { margin: 0 0 16px; display: grid; gap: 8px; }
+  .jobs:empty { display: none; }
   .job { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; font-size: 13px; }
   .job .top { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
   .job .name { font-weight: 600; }
@@ -148,9 +149,9 @@ function eta(job) {
 async function poll() {
   try {
     const jobs = (await (await fetch("/api/status")).json()).jobs;
-    $("jobs").innerHTML = jobs.filter(j => j.running || j.done < j.total).map(j => {
+    $("jobs").innerHTML = jobs.filter(j => j.running).map(j => {
       const pct = j.total ? Math.min(100, 100 * j.done / j.total) : 0;
-      const state = j.running ? eta(j) : "not running";
+      const state = eta(j);
       return `<div class="job"><div class="top"><span class="name">${esc(j.label)}</span>
         <span class="detail">${j.done.toLocaleString()} of ${j.total.toLocaleString()} (${pct.toFixed(1)}%) · ${esc(state)}</span></div>
         ${j.note ? `<div class="detail">${esc(j.note)}</div>` : ""}
