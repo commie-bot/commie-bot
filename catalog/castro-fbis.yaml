@@ -459,15 +459,6 @@ works:
   translator: Foreign Broadcast Information Service
   source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1960/19601011-3.html
   file: public/castro/fbis/castro-19601011-3.html
-- id: castro-19601016
-  author: Fidel Castro
-  title: Television Discussion of Castro with Rodruguez
-  year: 1960
-  date: '19601016'
-  type: speech
-  translator: Foreign Broadcast Information Service
-  source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1960/19601016.html
-  file: public/castro/fbis/castro-19601016.html
 - id: castro-19601030
   author: Fidel Castro
   title: Graduating Cadets at Managua
@@ -828,15 +819,6 @@ works:
   translator: Foreign Broadcast Information Service
   source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1963/19630515.html
   file: public/castro/fbis/castro-19630515.html
-- id: castro-19630517
-  author: Fidel Castro
-  title: Speech Prior to His Departure for Moscow
-  year: 1963
-  date: '19630517'
-  type: speech
-  translator: Foreign Broadcast Information Service
-  source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1963/19630517.html
-  file: public/castro/fbis/castro-19630517.html
 - id: castro-19630520
   author: Fidel Castro
   title: Castro Reply
@@ -1638,15 +1620,6 @@ works:
   translator: Foreign Broadcast Information Service
   source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1970/19700726-1.html
   file: public/castro/fbis/castro-19700726-1.html
-- id: castro-19700727
-  author: Fidel Castro
-  title: Tass Report on Speech
-  year: 1970
-  date: '19700727'
-  type: speech
-  translator: Foreign Broadcast Information Service
-  source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1970/19700727.html
-  file: public/castro/fbis/castro-19700727.html
 - id: castro-19700824
   author: Fidel Castro
   title: Text of Castro's Speech on Fmc 10th Anniversary
@@ -1836,15 +1809,6 @@ works:
   translator: Foreign Broadcast Information Service
   source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1971/19711001.html
   file: public/castro/fbis/castro-19711001.html
-- id: castro-19711111-6
-  author: Fidel Castro
-  title: San Miguel Speech
-  year: 1971
-  date: '19711111'
-  type: speech
-  translator: Foreign Broadcast Information Service
-  source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1971/19711111-6.html
-  file: public/castro/fbis/castro-19711111-6.html
 - id: castro-19711113-2
   author: Fidel Castro
   title: Rally on 12 November
@@ -1935,15 +1899,6 @@ works:
   translator: Foreign Broadcast Information Service
   source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1971/19711121.html
   file: public/castro/fbis/castro-19711121.html
-- id: castro-19711122-2
-  author: Fidel Castro
-  title: Castro's Southern Tour in Chile
-  year: 1971
-  date: '19711122'
-  type: speech
-  translator: Foreign Broadcast Information Service
-  source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1971/19711122-2.html
-  file: public/castro/fbis/castro-19711122-2.html
 - id: castro-19711124-2
   author: Fidel Castro
   title: Rally in Sewell
@@ -2079,15 +2034,6 @@ works:
   translator: Foreign Broadcast Information Service
   source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1972/19720505.html
   file: public/castro/fbis/castro-19720505.html
-- id: castro-19720506-1
-  author: Fidel Castro
-  title: 'Castro Ends Visit: Joint Communique Issued'
-  year: 1972
-  date: '19720506'
-  type: speech
-  translator: Foreign Broadcast Information Service
-  source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1972/19720506-1.html
-  file: public/castro/fbis/castro-19720506-1.html
 - id: castro-19720506-2
   author: Fidel Castro
   title: Castro Address in Faranah
@@ -2151,15 +2097,6 @@ works:
   translator: Foreign Broadcast Information Service
   source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1972/19720526.html
   file: public/castro/fbis/castro-19720526.html
-- id: castro-19720526-4
-  author: Fidel Castro
-  title: Post Luncheon Speech in Bucharest
-  year: 1972
-  date: '19720526'
-  type: speech
-  translator: Foreign Broadcast Information Service
-  source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1972/19720526-4.html
-  file: public/castro/fbis/castro-19720526-4.html
 - id: castro-19720527
   author: Fidel Castro
   title: Castro Toast at Luncheon Given-rcp Central Commi
@@ -2178,15 +2115,6 @@ works:
   translator: Foreign Broadcast Information Service
   source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1972/19720528.html
   file: public/castro/fbis/castro-19720528.html
-- id: castro-19720531-1
-  author: Fidel Castro
-  title: Castro Remarks in Hungary
-  year: 1972
-  date: '19720531'
-  type: speech
-  translator: Foreign Broadcast Information Service
-  source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1972/19720531-1.html
-  file: public/castro/fbis/castro-19720531-1.html
 - id: castro-19720605-1
   author: Fidel Castro
   title: 5 June Students Meeting at Univ. of Agricultural
@@ -2232,15 +2160,6 @@ works:
   translator: Foreign Broadcast Information Service
   source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1972/19720614.html
   file: public/castro/fbis/castro-19720614.html
-- id: castro-19720615-1
-  author: Fidel Castro
-  title: Tours with Honecker, Proceeds to Dresden
-  year: 1972
-  date: '19720615'
-  type: speech
-  translator: Foreign Broadcast Information Service
-  source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1972/19720615-1.html
-  file: public/castro/fbis/castro-19720615-1.html
 - id: castro-19720616
   author: Fidel Castro
   title: Castro Addresses Leuna Workers
@@ -2250,15 +2169,6 @@ works:
   translator: Foreign Broadcast Information Service
   source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1972/19720616.html
   file: public/castro/fbis/castro-19720616.html
-- id: castro-19720617
-  author: Fidel Castro
-  title: Castro Hails Ties
-  year: 1972
-  date: '19720617'
-  type: speech
-  translator: Foreign Broadcast Information Service
-  source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1972/19720617.html
-  file: public/castro/fbis/castro-19720617.html
 - id: castro-19720618
   author: Fidel Castro
   title: Tour of East Germany
@@ -2277,15 +2187,6 @@ works:
   translator: Foreign Broadcast Information Service
   source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1972/19720619.html
   file: public/castro/fbis/castro-19720619.html
-- id: castro-19720621-1
-  author: Fidel Castro
-  title: Castro Thanks Honecker, Stoph for Hospitality
-  year: 1972
-  date: '19720621'
-  type: speech
-  translator: Foreign Broadcast Information Service
-  source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1972/19720621-1.html
-  file: public/castro/fbis/castro-19720621-1.html
 - id: castro-19720624
   author: Fidel Castro
   title: Departure of Castro-led Delegation
@@ -2322,24 +2223,6 @@ works:
   translator: Foreign Broadcast Information Service
   source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1972/19720625-2.html
   file: public/castro/fbis/castro-19720625-2.html
-- id: castro-19720627-1
-  author: Fidel Castro
-  title: Dinner in the Kremlin
-  year: 1972
-  date: '19720627'
-  type: speech
-  translator: Foreign Broadcast Information Service
-  source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1972/19720627-1.html
-  file: public/castro/fbis/castro-19720627-1.html
-- id: castro-19720703
-  author: Fidel Castro
-  title: Reception in the Cuban Embassy
-  year: 1972
-  date: '19720703'
-  type: speech
-  translator: Foreign Broadcast Information Service
-  source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1972/19720703.html
-  file: public/castro/fbis/castro-19720703.html
 - id: castro-19720704
   author: Fidel Castro
   title: July 3rd Visit-agricultural Machinery Factory
@@ -2421,15 +2304,6 @@ works:
   translator: Foreign Broadcast Information Service
   source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1972/19721014.html
   file: public/castro/fbis/castro-19721014.html
-- id: castro-19721213
-  author: Fidel Castro
-  title: Castro, Allende Exchange Speeches at 13 Dec Fete
-  year: 1972
-  date: '19721213'
-  type: speech
-  translator: Foreign Broadcast Information Service
-  source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1972/19721213.html
-  file: public/castro/fbis/castro-19721213.html
 - id: castro-19721217
   author: Fidel Castro
   title: Graduation-university of Havana
@@ -2574,24 +2448,6 @@ works:
   translator: Foreign Broadcast Information Service
   source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1973/19730912-2.html
   file: public/castro/fbis/castro-19730912-2.html
-- id: castro-19730912-4
-  author: Fidel Castro
-  title: Dinner Hosted by Prime Minister Indira Gandhi
-  year: 1973
-  date: '19730912'
-  type: speech
-  translator: Foreign Broadcast Information Service
-  source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1973/19730912-4.html
-  file: public/castro/fbis/castro-19730912-4.html
-- id: castro-19730913
-  author: Fidel Castro
-  title: Banquet-central Committee of Vietnam Workers Pty
-  year: 1973
-  date: '19730913'
-  type: speech
-  translator: Foreign Broadcast Information Service
-  source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1973/19730913.html
-  file: public/castro/fbis/castro-19730913.html
 - id: castro-19730916-1
   author: Fidel Castro
   title: Quang Binh Rally
@@ -2601,15 +2457,6 @@ works:
   translator: Foreign Broadcast Information Service
   source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1973/19730916-1.html
   file: public/castro/fbis/castro-19730916-1.html
-- id: castro-19730917-3
-  author: Fidel Castro
-  title: Le Duan Address Hanoi Banquet Given by Cubans
-  year: 1973
-  date: '19730917'
-  type: speech
-  translator: Foreign Broadcast Information Service
-  source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1973/19730917-3.html
-  file: public/castro/fbis/castro-19730917-3.html
 - id: castro-19730918-2
   author: Fidel Castro
   title: Welcome the Cuban Delegation
@@ -2853,15 +2700,6 @@ works:
   translator: Foreign Broadcast Information Service
   source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1975/19750221.html
   file: public/castro/fbis/castro-19750221.html
-- id: castro-19750320
-  author: Fidel Castro
-  title: Proceedings of Nonalined Conference
-  year: 1975
-  date: '19750320'
-  type: speech
-  translator: Foreign Broadcast Information Service
-  source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1975/19750320.html
-  file: public/castro/fbis/castro-19750320.html
 - id: castro-19750320-1
   author: Fidel Castro
   title: Nonaligned Countries Coordinating Bureau
@@ -3186,15 +3024,6 @@ works:
   translator: Foreign Broadcast Information Service
   source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1978/19780215.html
   file: public/castro/fbis/castro-19780215.html
-- id: castro-19780423
-  author: Fidel Castro
-  title: Reportage on Mengistu Visit to Cuba
-  year: 1978
-  date: '19780423'
-  type: speech
-  translator: Foreign Broadcast Information Service
-  source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1978/19780423.html
-  file: public/castro/fbis/castro-19780423.html
 - id: castro-19780426
   author: Fidel Castro
   title: Public Friendship Rally
@@ -3564,15 +3393,6 @@ works:
   translator: Foreign Broadcast Information Service
   source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1981/19810224.html
   file: public/castro/fbis/castro-19810224.html
-- id: castro-19810301
-  author: Fidel Castro
-  title: Odessa Rally
-  year: 1981
-  date: '19810301'
-  type: speech
-  translator: Foreign Broadcast Information Service
-  source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1981/19810301.html
-  file: public/castro/fbis/castro-19810301.html
 - id: castro-19810302
   author: Fidel Castro
   title: Meeting Honoring Cuban Communist Party
@@ -3726,15 +3546,6 @@ works:
   translator: Foreign Broadcast Information Service
   source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1981/19810915.html
   file: public/castro/fbis/castro-19810915.html
-- id: castro-19811025
-  author: Fidel Castro
-  title: Leaders, Visitors Address CDR Congress
-  year: 1981
-  date: '19811025'
-  type: speech
-  translator: Foreign Broadcast Information Service
-  source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1981/19811025.html
-  file: public/castro/fbis/castro-19811025.html
 - id: castro-19811210
   author: Fidel Castro
   title: 5th Congress of the National Health Workers
@@ -3861,15 +3672,6 @@ works:
   translator: Foreign Broadcast Information Service
   source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1983/19830726.html
   file: public/castro/fbis/castro-19830726.html
-- id: castro-19830727-1
-  author: Fidel Castro
-  title: Rally on National Anniversary
-  year: 1983
-  date: '19830727'
-  type: speech
-  translator: Foreign Broadcast Information Service
-  source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1983/19830727-1.html
-  file: public/castro/fbis/castro-19830727-1.html
 - id: castro-19830927
   author: Fidel Castro
   title: Dedication of Santiago De Cuba Textile Comples
@@ -3888,15 +3690,6 @@ works:
   translator: Foreign Broadcast Information Service
   source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1984/19840102.html
   file: public/castro/fbis/castro-19840102.html
-- id: castro-19840225
-  author: Fidel Castro
-  title: 15th Congress of Cuba's Trade Union Center
-  year: 1984
-  date: '19840225'
-  type: speech
-  translator: Foreign Broadcast Information Service
-  source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1984/19840225.html
-  file: public/castro/fbis/castro-19840225.html
 - id: castro-19840513
   author: Fidel Castro
   title: National Conference of Medical Science Students
@@ -3969,15 +3762,6 @@ works:
   translator: Foreign Broadcast Information Service
   source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1984/19840726.html
   file: public/castro/fbis/castro-19840726.html
-- id: castro-19841029
-  author: Fidel Castro
-  title: Cmea Session
-  year: 1984
-  date: '19841029'
-  type: speech
-  translator: Foreign Broadcast Information Service
-  source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1984/19841029.html
-  file: public/castro/fbis/castro-19841029.html
 - id: castro-19841029-1
   author: Fidel Castro
   title: 39th Cema Meeting in Havana
@@ -3996,24 +3780,6 @@ works:
   translator: Foreign Broadcast Information Service
   source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1984/19841029-2.html
   file: public/castro/fbis/castro-19841029-2.html
-- id: castro-19841029-3
-  author: Fidel Castro
-  title: Cmea Session
-  year: 1984
-  date: '19841029'
-  type: speech
-  translator: Foreign Broadcast Information Service
-  source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1984/19841029-3.html
-  file: public/castro/fbis/castro-19841029-3.html
-- id: castro-19841031
-  author: Fidel Castro
-  title: 39th Cema Session
-  year: 1984
-  date: '19841031'
-  type: speech
-  translator: Foreign Broadcast Information Service
-  source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1984/19841031.html
-  file: public/castro/fbis/castro-19841031.html
 - id: castro-19841111
   author: Fidel Castro
   title: Pediatrics Congresses
@@ -4032,15 +3798,6 @@ works:
   translator: Foreign Broadcast Information Service
   source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1984/19841123.html
   file: public/castro/fbis/castro-19841123.html
-- id: castro-19841205-1
-  author: Fidel Castro
-  title: National Forum on Energy
-  year: 1984
-  date: '19841205'
-  type: speech
-  translator: Foreign Broadcast Information Service
-  source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1984/19841205-1.html
-  file: public/castro/fbis/castro-19841205-1.html
 - id: castro-19841209
   author: Fidel Castro
   title: 6th Congress of the Feem
@@ -4176,15 +3933,6 @@ works:
   translator: Foreign Broadcast Information Service
   source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1985/19851001.html
   file: public/castro/fbis/castro-19851001.html
-- id: castro-19851009
-  author: Fidel Castro
-  title: Kaunda Visits Isle of Youth-addresses Students
-  year: 1985
-  date: '19851009'
-  type: speech
-  translator: Foreign Broadcast Information Service
-  source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1985/19851009.html
-  file: public/castro/fbis/castro-19851009.html
 - id: castro-19851015
   author: Fidel Castro
   title: Castro Address to Hygiene Congress
@@ -4302,15 +4050,6 @@ works:
   translator: Foreign Broadcast Information Service
   source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1986/19861224-1.html
   file: public/castro/fbis/castro-19861224-1.html
-- id: castro-19861225-1
-  author: Fidel Castro
-  title: Castro Debates Report Anpp Meeting
-  year: 1986
-  date: '19861225'
-  type: speech
-  translator: Foreign Broadcast Information Service
-  source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1986/19861225-1.html
-  file: public/castro/fbis/castro-19861225-1.html
 - id: castro-19861227
   author: Fidel Castro
   title: 11th Anpp Assembly
@@ -5094,15 +4833,6 @@ works:
   translator: Foreign Broadcast Information Service
   source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1989/19890104-2.html
   file: public/castro/fbis/castro-19890104-2.html
-- id: castro-19890105
-  author: Fidel Castro
-  title: Czechoslovak-jakes Presents Award to Castro
-  year: 1989
-  date: '19890105'
-  type: speech
-  translator: Foreign Broadcast Information Service
-  source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1989/19890105.html
-  file: public/castro/fbis/castro-19890105.html
 - id: castro-19890109
   author: Fidel Castro
   title: 30th Anniversary of His 1st Speech
@@ -5193,15 +4923,6 @@ works:
   translator: Foreign Broadcast Information Service
   source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1989/19890404.html
   file: public/castro/fbis/castro-19890404.html
-- id: castro-19890404-5
-  author: Fidel Castro
-  title: Gorbachev Speaks to Anpp
-  year: 1989
-  date: '19890404'
-  type: speech
-  translator: Foreign Broadcast Information Service
-  source_url: https://web.archive.org/web/2019/http://lanic.utexas.edu/project/castro/db/1989/19890404-5.html
-  file: public/castro/fbis/castro-19890404-5.html
 - id: castro-19890505
   author: Fidel Castro
   title: Casstro Speaks at Sancti Spiritus Medical School
@@ -7032,3 +6753,34 @@ skipped:
 - castro-19960929
 - castro-19961002
 - castro-19961004
+- castro-19601016
+- castro-19630517
+- castro-19700727
+- castro-19711111-6
+- castro-19711122-2
+- castro-19720506-1
+- castro-19720526-4
+- castro-19720531-1
+- castro-19720615-1
+- castro-19720617
+- castro-19720621-1
+- castro-19720627-1
+- castro-19720703
+- castro-19721213
+- castro-19730912-4
+- castro-19730913
+- castro-19730917-3
+- castro-19750320
+- castro-19780423
+- castro-19810301
+- castro-19811025
+- castro-19830727-1
+- castro-19840225
+- castro-19841029
+- castro-19841029-3
+- castro-19841031
+- castro-19841205-1
+- castro-19851009
+- castro-19861225-1
+- castro-19890105
+- castro-19890404-5

@@ -162,6 +162,19 @@ def _save(conn, items: list[dict], results: list[dict]) -> int:
     return kept
 
 
+SHORT = 60  # characters
+
+
+def fragment(text: str) -> bool:
+    """A quote that can't stand alone: a short one that points back to earlier text,
+    such as "They simply destroy them.", or a headline in capitals."""
+    first = quotes.re.match(r"[\W_]*(\w+)", text)
+    if len(text) < SHORT and first and first.group(1).lower() in quotes.OPENERS:
+        return True
+    letters = [c for c in text if c.isalpha()]
+    return bool(letters) and sum(c.isupper() for c in letters) > 0.6 * len(letters)
+
+
 def materialize(conn, hashes: list[str] = None) -> int:
     """Rebuild bank rows from the stored decisions, for some quote hashes or all of them.
 
@@ -190,16 +203,23 @@ def materialize(conn, hashes: list[str] = None) -> int:
     pids = list({r["paragraph_id"] for r in rows})
     for i in range(0, len(pids), 900):
         passages.update(db.get_passages(conn, pids[i:i + 900]))
+    attributed = {h: (own, speaker) for h, own, speaker in
+                  conn.execute("SELECT hash, own, speaker FROM attributions")}
     n = 0
     for r in rows:
         p = passages.get(r["paragraph_id"])
         if not p:
             continue
         start, end, text = _span(p, r["start"], r["end"], r["before"], r["after"])
+        if fragment(text):
+            continue
+        own, speaker = attributed.get(quotes.text_hash(text), (1, ""))
+        if not own and not speaker:
+            continue  # someone else's words, and we don't know whose
         cur = conn.execute(
-            """INSERT INTO bank (source_hash, paragraph_id, start, end, text, rating, summary)
-               VALUES (?,?,?,?,?,?,?)""",
-            (r["hash"], r["paragraph_id"], start, end, text, r["rating"], r["summary"]))
+            """INSERT INTO bank (source_hash, paragraph_id, start, end, text, rating, summary, speaker)
+               VALUES (?,?,?,?,?,?,?,?)""",
+            (r["hash"], r["paragraph_id"], start, end, text, r["rating"], r["summary"], speaker or None))
         conn.executemany("INSERT INTO bank_tags (bank_id, tag, rank) VALUES (?,?,?)",
                          [(cur.lastrowid, t, i) for i, t in enumerate(r["tags"].split(",")) if t in TAGS])
         n += 1
@@ -342,7 +362,7 @@ def search(conn, text: str, plan: dict, k: int = None, author: str = None, warn=
         return []
     marks = ",".join("?" * len(fused))
     rows = {r["id"]: dict(r) for r in conn.execute(
-        f"SELECT id, paragraph_id, start, end, text, rating, summary FROM bank WHERE id IN ({marks})", list(fused))}
+        f"SELECT id, paragraph_id, start, end, text, rating, summary, speaker FROM bank WHERE id IN ({marks})", list(fused))}
     for bank_id, r in rows.items():
         r["score"] = fused[bank_id] * RATING_WEIGHT.get(r["rating"], 1.0)
     tags_by_id = {}
@@ -369,6 +389,117 @@ def search(conn, text: str, plan: dict, k: int = None, author: str = None, warn=
         if len(results) >= k:
             break
     return results
+
+# --- Attribution ---------------------------------------------------------------
+
+ATTRIBUTE_SYSTEM = """You check quotes for a bot that credits each quote to the person who said it.
+
+Each item shows a quote, the paragraph it comes from, and the end of the paragraph \
+before it. Decide whether the quote is the credited author's own words.
+
+Authors often quote other people without quotation marks, especially in histories and \
+in works of economics: a speech, letter, petition, newspaper, witness, or another \
+writer, often introduced in the paragraph before with "wrote", "said", "declared", or a \
+colon. Words the author is describing or paraphrasing in their own voice count as \
+their own.
+
+Song lyrics, poems, slogans, and document excerpts set off as their own paragraph are \
+quotations too.
+
+Return own: true if the words are the author's. If not, return speaker: who the words \
+belong to, as the text identifies them, such as "Frederick Douglass" or "a petition by \
+enslaved people in Massachusetts, 1773". Use an empty string if the text doesn't say. \
+Never guess a speaker the text doesn't name."""
+
+ATTRIBUTE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "items": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {"id": {"type": "integer"}, "own": {"type": "boolean"},
+                               "speaker": {"type": "string"}},
+                "required": ["id", "own", "speaker"],
+                "additionalProperties": False,
+            },
+        }
+    },
+    "required": ["items"],
+    "additionalProperties": False,
+}
+
+TAIL = 700  # characters of the previous paragraph to show
+
+
+def _unattributed(conn, author: str = None) -> list[dict]:
+    rows = conn.execute(
+        """SELECT b.id, b.text, b.paragraph_id, p.text AS paragraph, p.work_id, p.idx, w.author, w.title,
+                  (SELECT text FROM paragraphs WHERE work_id = p.work_id AND idx = p.idx - 1) AS previous
+           FROM bank b JOIN paragraphs p ON p.id = b.paragraph_id JOIN works w ON w.id = p.work_id
+           WHERE w.author LIKE ? ORDER BY b.id""", (f"%{author or ''}%",)).fetchall()
+    done = {r[0] for r in conn.execute("SELECT hash FROM attributions WHERE model = ?", (config.LLM_MODEL,))}
+    return [dict(r) for r in rows if quotes.text_hash(r["text"]) not in done]
+
+
+def format_for_attribution(items: list[dict]) -> str:
+    blocks = []
+    for q in items:
+        prev = (q["previous"] or "")[-TAIL:]
+        para = q["paragraph"].replace(q["text"], f"<quote>{q['text']}</quote>", 1)
+        hint = ""
+        if prev.rstrip().endswith(":"):
+            hint = ("<hint>The previous paragraph ends with a colon, so this paragraph is probably "
+                    "a block quotation of whoever it introduces.</hint>\n")
+        elif prev and len(prev) < 120 and not prev.rstrip().endswith((".", "!", "?", "”", '"')):
+            hint = "<hint>The previous paragraph looks like a line of verse or a heading.</hint>\n"
+        blocks.append(
+            f'<item id="{q["id"]}" author={quoteattr(q["author"])} work={quoteattr(q["title"])}>\n'
+            f"<previous_paragraph>{escape(prev)}</previous_paragraph>\n{hint}"
+            f"<paragraph>{escape(para).replace('&lt;quote&gt;', '<quote>').replace('&lt;/quote&gt;', '</quote>')}"
+            f"</paragraph>\n</item>")
+    return "\n\n".join(blocks)
+
+
+def _attribute_batch(items: list[dict]) -> list[dict]:
+    user = f"<items>\n{format_for_attribution(items)}\n</items>"
+    for attempt in range(5):
+        try:
+            return llm.complete_json(ATTRIBUTE_SYSTEM, user, ATTRIBUTE_SCHEMA, effort="medium").get("items", [])
+        except Exception:
+            if attempt == 4:
+                raise
+            time.sleep(2 ** attempt * 3)
+
+
+def attribute(conn, author: str = None, limit: int = None, batch_size: int = 15, workers: int = 8,
+              progress=None, warn=print) -> tuple[int, int]:
+    """Check whose words each bank quote is. Returns (checked, not the author's own). Resumable."""
+    todo = _unattributed(conn, author)[:limit]
+    batches = [todo[i:i + batch_size] for i in range(0, len(todo), batch_size)]
+    checked = others = 0
+    with ThreadPoolExecutor(workers) as pool:
+        futures = {pool.submit(_attribute_batch, b): b for b in batches}
+        for future in as_completed(futures):
+            batch = futures[future]
+            try:
+                by_id = {q["id"]: q for q in batch}
+                for r in future.result():
+                    q = by_id.pop(r.get("id"), None)
+                    if not q:
+                        continue
+                    own = bool(r.get("own", True))
+                    speaker = "" if own else (r.get("speaker") or "").strip()
+                    conn.execute("INSERT OR REPLACE INTO attributions (hash, own, speaker, model) VALUES (?,?,?,?)",
+                                 (quotes.text_hash(q["text"]), int(own), speaker, config.LLM_MODEL))
+                    checked += 1
+                    others += not own
+                conn.commit()
+            except Exception as e:
+                warn(f"Skipped {len(batch)} quotes after retries: {e}")
+            if progress:
+                progress(len(batch))
+    return checked, others
 
 
 def stats(conn) -> dict:

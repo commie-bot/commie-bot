@@ -156,6 +156,26 @@ def tag(author, limit, workers):
 
 
 @cli.command()
+@click.option("--author", help="Only check this author's quotes (substring match).")
+@click.option("--limit", type=int, help="Stop after this many quotes.")
+@click.option("--workers", default=8, show_default=True, help="Parallel LLM requests.")
+def attribute(author, limit, workers):
+    """Check that bank quotes are the author's own words, and credit quoted speakers. Resumes."""
+    conn = db.connect()
+    todo = len(bank._unattributed(conn, author)[:limit])
+    if todo:
+        with Progress(console=console) as progress:
+            task = progress.add_task(f"Checking with {config.LLM_MODEL}", total=todo)
+            checked, others = bank.attribute(conn, author, limit, workers=workers,
+                                             progress=lambda n: progress.advance(task, n),
+                                             warn=lambda m: console.print(f"[yellow]{m}[/]"))
+        console.print(f"Checked {checked} quotes; {others} are someone else's words.")
+    n = bank.materialize(conn)
+    named = conn.execute("SELECT COUNT(*) FROM bank WHERE speaker IS NOT NULL").fetchone()[0]
+    console.print(f"Bank: {n} quotes, {named} credited to the person the author quotes.")
+
+
+@cli.command()
 @click.argument("text")
 @click.option("--author", help="Only search this author (substring match).")
 @click.option("-k", default=10, show_default=True, help="Number of results.")
@@ -165,7 +185,7 @@ def search(text, author, k):
     for q in _search(conn, text, author, k):
         rating = "unrated" if q["rating"] is None else f"rated {q['rating']}"
         note = f"{rating}, score {q['score']:.4f}" + (f": {q['summary']}" if q.get("summary") else "")
-        console.print(Panel(q["text"], title=f"[{q['id']}] {render.citation(q)}", subtitle=note,
+        console.print(Panel(q["text"], title=f"[{q['id']}] {render.citation(q, q.get('speaker'))}", subtitle=note,
                             title_align="left", subtitle_align="left"))
 
 
@@ -235,7 +255,7 @@ def _pick(conn, text, author) -> list[dict]:
     choices = []
     for p in picks:
         try:
-            p["body"] = render.render(p["passage"], p["start"], p["end"])
+            p["body"] = render.render(p["passage"], p["start"], p["end"], p.get("speaker"))
         except render.Rejected as e:
             console.print(f"[red]Rejected pick: {e}[/]")
             continue

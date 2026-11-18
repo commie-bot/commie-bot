@@ -85,7 +85,8 @@ CREATE TABLE IF NOT EXISTS bank (
     end INTEGER NOT NULL,
     text TEXT NOT NULL,
     rating INTEGER,
-    summary TEXT
+    summary TEXT,
+    speaker TEXT  -- set when the author is quoting someone else
 );
 CREATE INDEX IF NOT EXISTS bank_source ON bank(source_hash);
 -- rank 0 is the quote's main topic
@@ -107,6 +108,14 @@ CREATE TABLE IF NOT EXISTS bank_reviewed (
     after INTEGER NOT NULL DEFAULT 0,
     model TEXT NOT NULL
 );
+-- Whose words a bank quote is, by a hash of its text. own = 0 means the author is
+-- quoting someone else: the speaker if the text names them, else empty.
+CREATE TABLE IF NOT EXISTS attributions (
+    hash TEXT PRIMARY KEY,
+    own INTEGER NOT NULL,
+    speaker TEXT NOT NULL DEFAULT '',
+    model TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS posted (
     id INTEGER PRIMARY KEY,
     paragraph_id INTEGER NOT NULL,
@@ -125,6 +134,8 @@ def connect(path: str = None) -> sqlite3.Connection:
     conn.execute("PRAGMA journal_mode = WAL")
     conn.execute("PRAGMA foreign_keys = ON")
     conn.executescript(SCHEMA)
+    if "speaker" not in {r[1] for r in conn.execute("PRAGMA table_info(bank)")}:
+        conn.execute("ALTER TABLE bank ADD COLUMN speaker TEXT")
     return conn
 
 

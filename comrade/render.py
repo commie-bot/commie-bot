@@ -64,20 +64,23 @@ def _check_not_quoted(passage: dict, quote: str) -> None:
         raise QuotesAnotherWriter(f"Quote in paragraph {passage['id']} is mostly another writer's words")
 
 
-def citation(passage: dict) -> str:
+def citation(passage: dict, speaker: str = None) -> str:
+    """The citation line. When `speaker` is set, the author quotes them, so credit the speaker."""
     title = f"*{passage['title']}*"
     if passage.get("source_url"):
         title = f"[{title}]({passage['source_url']})"
-    parts = [f"**{passage['author']}**", title]
+    if speaker:
+        cite = f"**{speaker}**, quoted in {passage['author']}, {title}"
+    else:
+        cite = f"**{passage['author']}**, {title}"
     section = (passage.get("section") or "").strip()
     if section and section.lower() != passage["title"].lower():
-        parts.append(section)
-    cite = ", ".join(parts)
+        cite += f", {section}"
     if passage.get("year"):
         cite += f" ({passage['year']})"
     return cite
 
 
-def render(passage: dict, start: int, end: int) -> str:
+def render(passage: dict, start: int, end: int, speaker: str = None) -> str:
     quote = quote_text(passage, start, end)
-    return f'> "{quote}"\n\n{citation(passage)}\n\n{FOOTER}'
+    return f'> "{quote}"\n\n{citation(passage, speaker)}\n\n{FOOTER}'

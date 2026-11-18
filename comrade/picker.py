@@ -57,7 +57,8 @@ def format_candidates(passages: list[dict]) -> str:
 def format_quotes(quotes: list[dict]) -> str:
     blocks = []
     for q in quotes:
-        attrs = f'id="{q["id"]}" author={quoteattr(q["author"])} work={quoteattr(q["title"])}'
+        author = f'{q["speaker"]}, quoted by {q["author"]}' if q.get("speaker") else q["author"]
+        attrs = f'id="{q["id"]}" author={quoteattr(author)} work={quoteattr(q["title"])}'
         if q.get("year"):
             attrs += f' year="{q["year"]}"'
         summary = f"\n<summary>{escape(q['summary'])}</summary>" if q.get("summary") else ""
@@ -88,5 +89,5 @@ def pick(target_text: str, quotes: list[dict], point: str = None) -> list[dict]:
         except render.Rejected:
             continue
         picks.append({"quote_id": q["id"], "passage": q["passage"], "start": q["start"], "end": q["end"],
-                      "reason": raw.get("reason", "")})
+                      "speaker": q.get("speaker"), "reason": raw.get("reason", "")})
     return picks[:3]

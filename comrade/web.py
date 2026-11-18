@@ -59,9 +59,10 @@ PAGE = """<!doctype html>
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function cite(p) {
+  const who = p.speaker ? `${esc(p.speaker)}, quoted in ${esc(p.author)}` : esc(p.author);
   const title = p.source_url ? `<a href="${esc(p.source_url)}" target="_blank"><i>${esc(p.title)}</i></a>` : `<i>${esc(p.title)}</i>`;
   const section = p.section && p.section.toLowerCase() !== p.title.toLowerCase() ? `, ${esc(p.section)}` : "";
-  return `${esc(p.author)}, ${title}${section}${p.year ? ` (${esc(p.year)})` : ""}`;
+  return `${who}, ${title}${section}${p.year ? ` (${esc(p.year)})` : ""}`;
 }
 async function run(mode) {
   const text = $("text").value.trim();
@@ -140,7 +141,8 @@ def handle_pick(body):
         results.append({**{f: p["passage"].get(f) for f in FIELDS}, "quote": quote, "reason": p["reason"],
                         "quote_id": p["quote_id"],
                         "start": p["start"], "end": p["end"],
-                        "body": render.render(p["passage"], p["start"], p["end"])})
+                        "speaker": p.get("speaker"),
+                        "body": render.render(p["passage"], p["start"], p["end"], p.get("speaker"))})
     return {"results": results, "plan": plan, "warning": "; ".join(warnings)}
 
 
