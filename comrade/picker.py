@@ -14,7 +14,7 @@ a quote from a socialist or communist writer.
 You get the target text and a list of candidate quotes, each with an id, its \
 author and work, and sometimes a one-line summary of its point. Choose the single \
 quote that responds most directly and memorably to the target text. The bot posts \
-your first pick. Add up to 2 runners-up after it.
+your first pick. Add up to {runners_up} runners-up after it, best first.
 
 Rules:
 - Pick a quote only if it answers what the target text says or argues. Sharing \
@@ -66,7 +66,10 @@ def format_quotes(quotes: list[dict]) -> str:
     return "\n\n".join(blocks)
 
 
-def pick(target_text: str, quotes: list[dict], point: str = None) -> list[dict]:
+PICKS = 5  # the best quote plus runners-up
+
+
+def pick(target_text: str, quotes: list[dict], point: str = None, n: int = PICKS) -> list[dict]:
     """Return validated picks from search results: [{passage, start, end, reason}], best first.
 
     `point` is the reply angle from `bank.classify`, shown to the model as a hint.
@@ -77,7 +80,7 @@ def pick(target_text: str, quotes: list[dict], point: str = None) -> list[dict]:
         f"<target>\n{escape(target_text)}\n</target>\n\n{hint}"
         f"<candidates>\n{format_quotes(quotes)}\n</candidates>"
     )
-    result = llm.complete_json(SYSTEM, user, SCHEMA)
+    result = llm.complete_json(SYSTEM.format(runners_up=max(n - 1, 0)), user, SCHEMA)
 
     picks = []
     for raw in result.get("picks", []):
@@ -90,4 +93,4 @@ def pick(target_text: str, quotes: list[dict], point: str = None) -> list[dict]:
             continue
         picks.append({"quote_id": q["id"], "passage": q["passage"], "start": q["start"], "end": q["end"],
                       "speaker": q.get("speaker"), "reason": raw.get("reason", "")})
-    return picks[:3]
+    return picks[:n]

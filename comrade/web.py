@@ -27,7 +27,8 @@ PAGE = """<!doctype html>
   textarea { min-height: 140px; resize: vertical; }
   .row { display: flex; gap: 8px; margin: 8px 0 20px; flex-wrap: wrap; }
   .row input { flex: 1 1 180px; width: auto; }
-  .row input[type=number] { flex: 0 0 90px; }
+  .row input[type=number] { flex: 0 0 64px; width: 64px; }
+  .count { display: flex; align-items: center; gap: 6px; color: var(--muted); white-space: nowrap; }
   button { font: inherit; padding: 9px 16px; border-radius: 6px; border: 1px solid var(--line);
     background: var(--card); color: inherit; cursor: pointer; }
   button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
@@ -56,7 +57,7 @@ PAGE = """<!doctype html>
 <textarea id="text" placeholder="Paste a Reddit post or comment"></textarea>
 <div class="row">
   <input id="author" placeholder="Author filter (optional), such as lenin">
-  <input id="k" type="number" value="20" min="1" max="100" title="Number of quotes">
+  <label class="count">Show <input id="k" type="number" value="5" min="1" max="50"> quotes</label>
   <button id="search">Search</button>
   <button id="pick" class="primary">Pick quotes with the LLM</button>
 </div>
@@ -81,7 +82,7 @@ async function run(mode) {
   const t0 = performance.now();
   try {
     const r = await fetch("/api/" + mode, { method: "POST", headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ text, author: $("author").value.trim() || null, k: +$("k").value || 20 }) });
+      body: JSON.stringify({ text, author: $("author").value.trim() || null, k: +$("k").value || 5 }) });
     const data = await r.json();
     if (!r.ok) throw new Error(data.error);
     const secs = ((performance.now() - t0) / 1000).toFixed(1);
@@ -160,12 +161,15 @@ def handle_pick(body):
         raise RuntimeError(f"No API key for {config.LLM_PROVIDER}. Set LLM_API_KEY in .env, then restart the page.")
     conn, warnings = db.connect(), []
     plan = bank.classify(body["text"])
-    candidates = bank.search(conn, body["text"], plan, author=body.get("author"), warn=warnings.append)
+    n = max(1, min(int(body.get("k") or picker.PICKS), 20))
+    # Give the picker a pool at least 4 times the number of picks to choose from
+    candidates = bank.search(conn, body["text"], plan, k=max(config.CANDIDATES, n * 4),
+                             author=body.get("author"), warn=warnings.append)
     if not candidates:
         warnings.append("no bank matches, searched all quotes")
-        candidates = _search(conn, {**body, "k": None}, warnings)  # the picker sees config.CANDIDATES quotes
+        candidates = _search(conn, {**body, "k": max(config.CANDIDATES, n * 4)}, warnings)
     results = []
-    for p in picker.pick(body["text"], candidates, plan["point"]) if candidates else []:
+    for p in picker.pick(body["text"], candidates, plan["point"], n) if candidates else []:
         try:
             quote = render.quote_text(p["passage"], p["start"], p["end"])
         except render.Rejected as e:
