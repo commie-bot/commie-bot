@@ -41,10 +41,18 @@ PAGE = """<!doctype html>
   .reason { color: var(--muted); font-size: 13px; margin-top: 6px; }
   .text { white-space: pre-wrap; }
   details summary { cursor: pointer; color: var(--muted); font-size: 13px; margin-top: 8px; }
+  .jobs { margin: 0 0 16px; display: grid; gap: 8px; }
+  .job { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; font-size: 13px; }
+  .job .top { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .job .name { font-weight: 600; }
+  .job .detail { color: var(--muted); }
+  .bar { height: 6px; background: var(--line); border-radius: 3px; margin-top: 8px; overflow: hidden; }
+  .bar div { height: 100%; background: var(--accent); transition: width .5s; }
   pre { white-space: pre-wrap; font-size: 13px; background: var(--bg); padding: 8px; border-radius: 4px; }
 </style></head>
 <body><main>
 <h1>Quote Finder</h1>
+<div class="jobs" id="jobs"></div>
 <textarea id="text" placeholder="Paste a Reddit post or comment"></textarea>
 <div class="row">
   <input id="author" placeholder="Author filter (optional), such as lenin">
@@ -100,6 +108,31 @@ async function run(mode) {
     for (const b of document.querySelectorAll("button")) b.disabled = false;
   }
 }
+const seen = {};  // job name -> [time, done] from the first poll that saw it running, for the time estimate
+function eta(job) {
+  const now = Date.now() / 1000;
+  if (!job.running) { delete seen[job.name]; return ""; }
+  if (!seen[job.name] || seen[job.name][1] > job.done) seen[job.name] = [now, job.done];
+  const [t0, d0] = seen[job.name], rate = (job.done - d0) / (now - t0);
+  if (now - t0 < 10 || rate <= 0) return "measuring speed";
+  const mins = (job.total - job.done) / rate / 60;
+  return `${Math.round(rate * 60).toLocaleString()} per minute, about ${mins < 1 ? "1" : Math.round(mins)} min left`;
+}
+async function poll() {
+  try {
+    const jobs = (await (await fetch("/api/status")).json()).jobs;
+    $("jobs").innerHTML = jobs.filter(j => j.running || j.done < j.total).map(j => {
+      const pct = j.total ? Math.min(100, 100 * j.done / j.total) : 0;
+      const state = j.running ? eta(j) : "not running";
+      return `<div class="job"><div class="top"><span class="name">${esc(j.label)}</span>
+        <span class="detail">${j.done.toLocaleString()} of ${j.total.toLocaleString()} (${pct.toFixed(1)}%) · ${esc(state)}</span></div>
+        ${j.note ? `<div class="detail">${esc(j.note)}</div>` : ""}
+        <div class="bar"><div style="width:${pct}%"></div></div></div>`;
+    }).join("");
+  } catch (e) { /* the page still works without the panel */ }
+}
+poll();
+setInterval(poll, 5000);
 $("search").onclick = () => run("search");
 $("pick").onclick = () => run("pick");
 $("text").addEventListener("keydown", e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) run("search"); });
@@ -146,6 +179,49 @@ def handle_pick(body):
     return {"results": results, "plan": plan, "warning": "; ".join(warnings)}
 
 
+def _running(command: str) -> bool:
+    import subprocess
+    return subprocess.run(["pgrep", "-f", f"python.*main.py {command}"], capture_output=True).returncode == 0
+
+
+_status_cache = {"at": 0.0, "body": None}
+
+
+def handle_status():
+    """Progress of the background jobs that build the quote index."""
+    import time
+
+    from comrade import quotes
+    if time.time() - _status_cache["at"] < 4:
+        return _status_cache["body"]
+    conn = db.connect()
+    one = lambda sql, *a: conn.execute(sql, a).fetchone()[0]
+    model = config.LLM_MODEL
+    jobs = [
+        {"name": "rate", "label": "Rating quotes",
+         "done": one("SELECT COUNT(*) FROM rated_paragraphs WHERE model = ?", quotes._rated_key()),
+         "total": one("SELECT COUNT(DISTINCT paragraph_id) FROM quotes")},
+        {"name": "embed", "label": "Embedding quotes and summaries",
+         "done": one("SELECT COUNT(*) FROM quote_vectors WHERE model = ?", config.EMBED_MODEL),
+         "total": one("SELECT COUNT(DISTINCT hash) FROM quotes")
+                  + one("SELECT COUNT(*) FROM quote_scores WHERE summary <> ''")},
+        {"name": "tag", "label": "Tagging the quote bank",
+         "done": one("SELECT COUNT(*) FROM bank_reviewed WHERE model = ?", model),
+         "total": one("SELECT COUNT(*) FROM quote_scores WHERE rating >= 3")},
+    ]
+    attributed = {h: own for h, own in conn.execute("SELECT hash, own FROM attributions WHERE model = ?", (model,))}
+    texts = [quotes.text_hash(t) for (t,) in conn.execute("SELECT text FROM bank")]
+    done = sum(h in attributed for h in texts)
+    others = sum(1 for own in attributed.values() if not own)
+    jobs.append({"name": "attribute", "label": "Checking who said each quote", "done": done, "total": len(texts),
+                 "note": f"{others:,} so far are someone else's words"})
+    for j in jobs:
+        j["running"] = _running(j["name"])
+        j["done"] = min(j["done"], j["total"])
+    _status_cache.update(at=time.time(), body={"jobs": jobs})
+    return _status_cache["body"]
+
+
 ROUTES = {"/api/search": handle_search, "/api/pick": handle_pick}
 
 
@@ -161,6 +237,11 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/":
             self._send(200, PAGE, "text/html")
+        elif self.path == "/api/status":
+            try:
+                self._send(200, handle_status())
+            except Exception as e:
+                self._send(500, {"error": f"{type(e).__name__}: {e}"})
         else:
             self._send(404, {"error": "Not found"})
 
