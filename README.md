@@ -5,17 +5,19 @@ A CLI that replies to a Reddit post or comment with a verbatim quote from a soci
 Ahead of time, the bot builds an index of quotes:
 
 1. Split every work into paragraphs and sentences.
-2. Extract quote candidates: every run of 1 to 3 sentences, under 300 characters, that can stand alone. Rules drop spans that open with a word like "This" or "Thus", fragments, statistics, and words the author quotes from someone else.
+2. Extract quote candidates: every run of 1 to 4 sentences, under 450 characters, that can stand alone. Rules drop spans that open with a word like "This" or "Thus", fragments, statistics, and words the author quotes from someone else.
 3. Optional: an LLM reads every paragraph once, rates its best quotes from 3 to 5, and writes a one-line summary of each quote's point in plain modern English.
 4. Embed each quote and each summary with Ollama.
+5. Build the quote bank: an LLM reviews every quote rated 3 or higher, keeps the ones a reader understands without knowing the source, and tags each with 1 to 4 topics from `comrade/tags.py`, such as `landlords-housing` or `reform-vs-revolution`. It can extend a quote with neighboring sentences, up to 5 sentences and 550 characters.
 
 To reply:
 
 1. Fetch the post or comment text.
-2. Retrieve the top 20 quotes with hybrid search: SQLite FTS5 BM25 over the quotes and summaries, plus embeddings of both, merged with reciprocal rank fusion. Higher-rated quotes get a boost, and quotes the LLM passed over get a penalty.
-3. Ask an LLM to pick up to 3 of them. The model returns only quote IDs.
-4. Build each quote from the stored sentences and check that it's an exact substring of the source paragraph.
-5. Show the candidates. You pick one, and the bot posts it.
+2. Ask an LLM for the post's topics (from the same tag list) and the point an ideal reply would make, such as "Voting for the lesser evil still keeps the ruling class in power."
+3. Retrieve the top 20 bank quotes: quotes with the post's tags, ranked by how close their summary is to that point, merged with plain embedding matches by reciprocal rank fusion. If the bank has no match, search all quotes instead.
+4. Ask an LLM to pick the best quote and up to 2 runners-up. The model returns only quote IDs.
+5. Build each quote from the stored sentences and check that it's an exact substring of the source paragraph.
+6. Show the best quote and the runners-up. You confirm, and the bot posts it.
 
 Because the model never writes quote text, every quote is verbatim. Matching against summaries finds quotes that make the same point as a post in different words, such as "my landlord takes half my paycheck" and a passage on rent absorbing the tenant's profit.
 
@@ -117,17 +119,20 @@ python main.py ingest                 # parse all works (re-running replaces the
 python main.py ingest --work manifesto
 python main.py rate                   # LLM ratings and summaries (resumes; about $11 for the full corpus on Cerebras)
 python main.py embed                  # embed new quotes and summaries
+python main.py tag                    # build the quote bank (resumes; about $5 for the full corpus on Cerebras)
 python main.py search "landlords are parasites"        # retrieval only
 python main.py quote "landlords are parasites"         # retrieval + LLM, no Reddit
 python main.py reply <reddit-url> --dry-run
 python main.py reply <reddit-url> --author lenin
 ```
 
-`ingest` also extracts the quote candidates. Run `rate` and then `embed` after you add works. `rate` is optional: without it, every quote is unrated and ranks on its match alone. Ratings and vectors are stored by a hash of the quote text, so re-ingesting a work doesn't redo them.
+`ingest` also extracts the quote candidates. After you add works, run `rate`, `embed`, and then `tag`. Ratings, vectors, and bank decisions are stored by a hash of the quote text, so re-ingesting a work doesn't redo them. Without `rate` and `tag`, replies fall back to searching all quotes.
+
+To change the topic list, edit `comrade/tags.py`. Quotes already tagged keep their old tags until you clear the `bank_reviewed` table and run `tag` again.
 
 `search` works without embeddings; it falls back to keyword search and prints a warning.
 
-To test retrieval in a browser, run `python main.py serve` and open `http://127.0.0.1:8765`. Paste text, then click **Search** to see ranked quotes with their ratings and summaries, or **Pick quotes with the LLM** to see the quotes the bot would post. The page listens only on your computer.
+To test retrieval in a browser, run `python main.py serve` and open `http://127.0.0.1:8765`. Paste text, then click **Search** to see ranked quotes with their ratings and summaries, or **Pick quotes with the LLM** to see the post's tags, the reply point, and the quote the bot would post. The page listens only on your computer.
 
 ## Reply format
 

@@ -1,6 +1,6 @@
 """Precomputed quote candidates: extraction rules and the offline LLM rating pass.
 
-A candidate is a run of 1 to 3 sentences from one paragraph that fits in a
+A candidate is a run of 1 to 4 sentences from one paragraph that fits in a
 reply and can stand alone. Search matches posts against candidates instead of
 whole paragraphs, so the score measures the quote that would be posted.
 """
@@ -41,7 +41,7 @@ def standalone(text: str) -> bool:
 
 
 def candidates(passage: dict, chosen: set = frozenset()) -> list[tuple[int, int, str]]:
-    """Every 1 to 3 sentence run in a passage that passes the length, standalone, and quotation rules.
+    """Every 1 to 4 sentence run in a passage that passes the length, standalone, and quotation rules.
 
     Runs whose hash is in `chosen` (quotes the LLM rated 3 or higher) skip the
     standalone rules, which they can fail, such as one that opens with "But".
@@ -114,12 +114,15 @@ RATE_SYSTEM = """You label lines for a Reddit bot that replies with quotes from 
 and communist writers.
 
 You get passages with numbered sentences; each sentence shows its length in characters. \
-In each passage, find up to 2 spans that work as a standalone quote:
+In each passage, find up to 3 spans that work as a standalone quote:
 - The author's own words, not words they quote from someone else.
 - Understandable without the rest of the passage.
 - A contiguous run of at most {max_span} sentences and under {max_chars} characters. \
 start and end are inclusive sentence numbers.
 - Makes a clear point that could answer a post or comment.
+
+Longer spans are fine when every sentence adds to the point. Don't cut a quote \
+short if the next sentence completes the thought.
 
 Rate each span:
 5 = a sharp, memorable line people would share.
@@ -154,11 +157,20 @@ RATE_SCHEMA = {
 }
 
 
+# Bump when the rating prompt or limits change, so every paragraph is rated again.
+# New ratings replace old ones; quotes chosen before keep their ratings.
+RATE_VERSION = 2
+
+
+def _rated_key() -> str:
+    return f"{config.LLM_MODEL}/v{RATE_VERSION}"
+
+
 def _unrated(conn, author: str = None) -> list[dict]:
     """Paragraphs that have candidates and haven't been rated with the current model."""
     from comrade import db
 
-    rated = {r[0] for r in conn.execute("SELECT hash FROM rated_paragraphs WHERE model = ?", (config.LLM_MODEL,))}
+    rated = {r[0] for r in conn.execute("SELECT hash FROM rated_paragraphs WHERE model = ?", (_rated_key(),))}
     where, params = "WHERE p.id IN (SELECT paragraph_id FROM quotes)", []
     if author:
         where += " AND p.work_id IN (SELECT id FROM works WHERE author LIKE ?)"
@@ -202,8 +214,13 @@ def _save(conn, batch: list[dict], picks: list[dict]) -> int:
         except render.Rejected:
             continue
         h = text_hash(text)
+        summary = (q.get("summary") or "").strip()
+        prev = conn.execute("SELECT summary FROM quote_scores WHERE hash = ?", (h,)).fetchone()
+        if prev and prev[0] and prev[0] != summary:
+            # The summary vector is keyed by the quote hash, so drop it to embed the new summary
+            conn.execute("DELETE FROM quote_vectors WHERE hash = ? AND kind = 'summary'", (h,))
         conn.execute("INSERT OR REPLACE INTO quote_scores (hash, rating, summary, model) VALUES (?,?,?,?)",
-                     (h, rating, (q.get("summary") or "").strip(), config.LLM_MODEL))
+                     (h, rating, summary, config.LLM_MODEL))
         if not conn.execute("SELECT 1 FROM quotes WHERE paragraph_id = ? AND start = ? AND end = ?",
                             (p["id"], start, end)).fetchone():
             # The model can find a good quote that the rules missed, such as one that opens with "But"
@@ -216,7 +233,7 @@ def _save(conn, batch: list[dict], picks: list[dict]) -> int:
             conn.execute("INSERT OR IGNORE INTO quote_scores (hash, rating, summary, model) VALUES (?,0,NULL,?)",
                          (h, config.LLM_MODEL))
     conn.executemany("INSERT OR REPLACE INTO rated_paragraphs (hash, model) VALUES (?,?)",
-                     [(text_hash(p["text"]), config.LLM_MODEL) for p in batch])
+                     [(text_hash(p["text"]), _rated_key()) for p in batch])
     _index(conn, f"WHERE q.paragraph_id IN ({marks})", list(by_id))
     conn.commit()
     return len(chosen)

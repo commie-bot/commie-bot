@@ -3,6 +3,7 @@ import json
 import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
+from comrade import bank
 from comrade import db
 from comrade import picker
 from comrade import render
@@ -75,10 +76,11 @@ async function run(mode) {
     const data = await r.json();
     if (!r.ok) throw new Error(data.error);
     const secs = ((performance.now() - t0) / 1000).toFixed(1);
-    $("status").textContent = `${data.results.length} results in ${secs} s` + (data.warning ? ` (${data.warning})` : "");
+    $("status").textContent = `${data.results.length} results in ${secs} s` + (data.warning ? ` (${data.warning})` : "")
+      + (data.plan ? `. Tags: ${data.plan.tags.join(", ") || "none"}. Point: ${data.plan.point}` : "");
     $("results").innerHTML = data.results.map((p, i) => mode === "pick" ? `
       <div class="card">
-        <div class="meta"><span>#${i + 1}</span><span>quote ${p.quote_id}</span></div>
+        <div class="meta"><span>${i ? "#" + (i + 1) + " runner-up" : "Best"}</span><span>quote ${p.quote_id}</span></div>
         <div class="quote">${esc(p.quote)}</div>
         <div class="cite">${cite(p)}</div>
         <div class="reason">${esc(p.reason)}</div>
@@ -123,9 +125,13 @@ def handle_pick(body):
     if config.LLM_PROVIDER in ("cerebras", "anthropic") and not (config.LLM_API_KEY or os.getenv("ANTHROPIC_API_KEY")):
         raise RuntimeError(f"No API key for {config.LLM_PROVIDER}. Set LLM_API_KEY in .env, then restart the page.")
     conn, warnings = db.connect(), []
-    candidates = _search(conn, {**body, "k": None}, warnings)  # the picker sees config.CANDIDATES quotes
+    plan = bank.classify(body["text"])
+    candidates = bank.search(conn, body["text"], plan, author=body.get("author"), warn=warnings.append)
+    if not candidates:
+        warnings.append("no bank matches, searched all quotes")
+        candidates = _search(conn, {**body, "k": None}, warnings)  # the picker sees config.CANDIDATES quotes
     results = []
-    for p in picker.pick(body["text"], candidates) if candidates else []:
+    for p in picker.pick(body["text"], candidates, plan["point"]) if candidates else []:
         try:
             quote = render.quote_text(p["passage"], p["start"], p["end"])
         except render.Rejected as e:
@@ -135,7 +141,7 @@ def handle_pick(body):
                         "quote_id": p["quote_id"],
                         "start": p["start"], "end": p["end"],
                         "body": render.render(p["passage"], p["start"], p["end"])})
-    return {"results": results, "warning": "; ".join(warnings)}
+    return {"results": results, "plan": plan, "warning": "; ".join(warnings)}
 
 
 ROUTES = {"/api/search": handle_search, "/api/pick": handle_pick}

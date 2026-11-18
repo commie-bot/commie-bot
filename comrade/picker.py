@@ -12,15 +12,17 @@ SYSTEM = """You pick quotes for a Reddit bot that replies to posts and comments 
 a quote from a socialist or communist writer.
 
 You get the target text and a list of candidate quotes, each with an id, its \
-author and work, and sometimes a one-line summary of its point. Choose up to 3 \
-quotes that respond most directly and memorably to the target text.
+author and work, and sometimes a one-line summary of its point. Choose the single \
+quote that responds most directly and memorably to the target text. The bot posts \
+your first pick. Add up to 2 runners-up after it.
 
 Rules:
 - Pick a quote only if it answers what the target text says or argues. Sharing \
 words with the target isn't enough.
 - Prefer sharp, quotable lines over dense theory.
-- Rank the best pick first. Use different authors or works across picks when the \
-quality is similar.
+- A reply should read as a pointed answer to the target, not a lecture. Prefer a \
+quote whose point a reader gets on the first read.
+- Use different authors or works for the runners-up when the quality is similar.
 - If no candidate fits, return an empty list."""
 
 SCHEMA = {
@@ -63,11 +65,15 @@ def format_quotes(quotes: list[dict]) -> str:
     return "\n\n".join(blocks)
 
 
-def pick(target_text: str, quotes: list[dict]) -> list[dict]:
-    """Return validated picks from search results: [{passage, start, end, reason}], best first."""
+def pick(target_text: str, quotes: list[dict], point: str = None) -> list[dict]:
+    """Return validated picks from search results: [{passage, start, end, reason}], best first.
+
+    `point` is the reply angle from `bank.classify`, shown to the model as a hint.
+    """
     by_id = {q["id"]: q for q in quotes}
+    hint = f"<suggested_point>{escape(point)}</suggested_point>\n\n" if point else ""
     user = (
-        f"<target>\n{escape(target_text)}\n</target>\n\n"
+        f"<target>\n{escape(target_text)}\n</target>\n\n{hint}"
         f"<candidates>\n{format_quotes(quotes)}\n</candidates>"
     )
     result = llm.complete_json(SYSTEM, user, SCHEMA)

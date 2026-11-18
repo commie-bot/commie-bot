@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS embeddings (
     model TEXT NOT NULL,
     vec BLOB NOT NULL
 );
--- Quote candidates: runs of 1 to 3 sentences that can stand alone. Rebuilt from
+-- Quote candidates: runs of 1 to 4 sentences that can stand alone. Rebuilt from
 -- sentences by `extract`. Scores and vectors are keyed by a hash of the text, so
 -- they survive re-ingest.
 CREATE TABLE IF NOT EXISTS quotes (
@@ -75,6 +75,38 @@ CREATE TABLE IF NOT EXISTS quote_vectors (
     vec BLOB NOT NULL,
     PRIMARY KEY (hash, kind, model)
 );
+-- The quote bank: quotes the tagging pass kept as replies, tagged by topic.
+-- source_hash is the reviewed quote; text can be longer when the model extended it.
+CREATE TABLE IF NOT EXISTS bank (
+    id INTEGER PRIMARY KEY,
+    source_hash TEXT NOT NULL,
+    paragraph_id INTEGER NOT NULL REFERENCES paragraphs(id),
+    start INTEGER NOT NULL,
+    end INTEGER NOT NULL,
+    text TEXT NOT NULL,
+    rating INTEGER,
+    summary TEXT
+);
+CREATE INDEX IF NOT EXISTS bank_source ON bank(source_hash);
+-- rank 0 is the quote's main topic
+CREATE TABLE IF NOT EXISTS bank_tags (
+    bank_id INTEGER NOT NULL REFERENCES bank(id),
+    tag TEXT NOT NULL,
+    rank INTEGER NOT NULL,
+    PRIMARY KEY (bank_id, tag)
+);
+CREATE INDEX IF NOT EXISTS bank_tags_tag ON bank_tags(tag);
+-- The tagging pass's decisions, by quote hash, so the bank survives re-ingest.
+-- tags is comma-separated, main topic first. before and after are the sentences
+-- the model added on each side of the quote.
+CREATE TABLE IF NOT EXISTS bank_reviewed (
+    hash TEXT PRIMARY KEY,
+    keep INTEGER NOT NULL,
+    tags TEXT NOT NULL DEFAULT '',
+    before INTEGER NOT NULL DEFAULT 0,
+    after INTEGER NOT NULL DEFAULT 0,
+    model TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS posted (
     id INTEGER PRIMARY KEY,
     paragraph_id INTEGER NOT NULL,
@@ -108,6 +140,8 @@ def delete_work(conn: sqlite3.Connection, work_id: str):
         for i in range(0, len(quote_ids), 900):
             chunk = quote_ids[i:i + 900]
             conn.execute(f"DELETE FROM quotes_fts WHERE rowid IN ({','.join('?' * len(chunk))})", chunk)
+        conn.execute(f"DELETE FROM bank_tags WHERE bank_id IN (SELECT id FROM bank WHERE paragraph_id IN ({marks}))", ids)
+        conn.execute(f"DELETE FROM bank WHERE paragraph_id IN ({marks})", ids)
         conn.execute(f"DELETE FROM quotes WHERE paragraph_id IN ({marks})", ids)
     conn.execute("DELETE FROM paragraphs WHERE work_id = ?", (work_id,))
     conn.execute("DELETE FROM sections WHERE work_id = ?", (work_id,))

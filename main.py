@@ -7,6 +7,7 @@ from rich.progress import Progress
 from rich.prompt import Prompt
 from rich.table import Table
 
+from comrade import bank
 from comrade import db
 from comrade import embed as embedder
 from comrade.sources import marxists as fetcher
@@ -94,7 +95,9 @@ def ingest(work_id):
         table.add_row(w["id"], str(len(sections)), str(n_paragraphs), str(n_sentences))
     console.print(table)
     n_quotes = quotes.extract(conn, [work_id] if work_id else None)
-    console.print(f"Extracted {n_quotes} quote candidates. Run [bold]python main.py embed[/] to update embeddings.")
+    n_bank = bank.materialize(conn)
+    console.print(f"Extracted {n_quotes} quote candidates and rebuilt {n_bank} bank quotes. "
+                  "Run [bold]python main.py embed[/] to update embeddings.")
 
 
 @cli.command()
@@ -127,6 +130,29 @@ def rate(author, limit, workers):
                                     progress=lambda n: progress.advance(task, n),
                                     warn=lambda m: console.print(f"[yellow]{m}[/]"))
     console.print(f"Rated {rated} paragraphs and chose {chosen} quotes. Run [bold]python main.py embed[/] next.")
+
+
+@cli.command()
+@click.option("--author", help="Only review this author's quotes (substring match).")
+@click.option("--limit", type=int, help="Stop after this many quotes.")
+@click.option("--workers", default=8, show_default=True, help="Parallel LLM requests.")
+def tag(author, limit, workers):
+    """Build the quote bank: keep quotes that work as replies and tag them by topic. Resumes."""
+    conn = db.connect()
+    todo = len(bank._untagged(conn, author)[:limit])
+    if todo:
+        with Progress(console=console) as progress:
+            task = progress.add_task(f"Tagging with {config.LLM_MODEL}", total=todo)
+            reviewed, kept = bank.build(conn, author, limit, workers=workers,
+                                        progress=lambda n: progress.advance(task, n),
+                                        warn=lambda m: console.print(f"[yellow]{m}[/]"))
+        console.print(f"Reviewed {reviewed} quotes and kept {kept}.")
+    s = bank.stats(conn)
+    console.print(f"Bank: {s['kept']} of {s['reviewed']} reviewed quotes kept, {s['extended']} extended.")
+    table = Table("tag", "quotes")
+    for t, n in s["tags"].items():
+        table.add_row(t, str(n))
+    console.print(table)
 
 
 @cli.command()
@@ -197,9 +223,15 @@ def _search(conn, text, author, k=None):
 
 
 def _pick(conn, text, author) -> list[dict]:
-    candidates = _search(conn, text, author)
+    with console.status(f"Asking {config.LLM_MODEL} what the post is about"):
+        plan = bank.classify(text)
+    console.print(f"[dim]Tags: {', '.join(plan['tags']) or 'none'}. Point: {plan['point']}[/]")
+    candidates = bank.search(conn, text, plan, author=author, warn=lambda m: console.print(f"[yellow]{m}[/]"))
+    if not candidates:
+        console.print("[yellow]The quote bank has no matches. Searching all quotes.[/]")
+        candidates = _search(conn, text, author)
     with console.status(f"Asking {config.LLM_MODEL} to pick quotes"):
-        picks = picker.pick(text, candidates)
+        picks = picker.pick(text, candidates, plan["point"])
     choices = []
     for p in picks:
         try:
@@ -215,7 +247,9 @@ def _pick(conn, text, author) -> list[dict]:
 
 def _show(choices):
     for i, c in enumerate(choices, 1):
-        console.print(Panel(c["body"], title=f"{i}", subtitle=c["reason"], title_align="left"))
+        title = "1 (best)" if i == 1 else f"{i} (runner-up)"
+        console.print(Panel(c["body"], title=title, subtitle=c["reason"], title_align="left",
+                            border_style="green" if i == 1 else "dim"))
 
 
 if __name__ == "__main__":

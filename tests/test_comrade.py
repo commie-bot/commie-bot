@@ -151,3 +151,22 @@ def test_picker_drops_unknown_and_repeated_ids(monkeypatch):
     picks = {"picks": [{"quote_id": 99, "reason": ""}, {"quote_id": 5, "reason": "a"}, {"quote_id": 5, "reason": "b"}]}
     monkeypatch.setattr(llm, "complete_json", lambda *a, **k: picks)
     assert [p["quote_id"] for p in picker.pick("target", [quote])] == [5]
+
+
+def test_bank_extension_kept_only_when_valid():
+    from comrade import bank
+
+    p = _passage("Capital is dead labour. It lives only by sucking living labour. "
+                 "The more labour it sucks, the more it lives.")
+    assert bank._span(p, 1, 2, 1, 0) == (0, 2, " ".join(p["sentences"]))
+    assert bank._span(p, 0, 0, 0, 5)[:2] == (0, 0)  # past the end of the paragraph
+    long = _passage("Short opening line here. " + "word " * 120 + "end.")
+    assert bank._span(long, 0, 0, 0, 1)[:2] == (0, 0)  # over the character limit
+
+
+def test_bank_tags_match_the_schema():
+    from comrade import bank
+    from comrade.tags import TAGS
+
+    assert bank.TAG_SCHEMA["properties"]["quotes"]["items"]["properties"]["tags"]["items"]["enum"] == list(TAGS)
+    assert all(t == t.lower() and " " not in t for t in TAGS)
