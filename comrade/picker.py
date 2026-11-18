@@ -14,7 +14,8 @@ a quote from a socialist or communist writer.
 You get the target text and a list of candidate quotes, each with an id, its \
 author and work, and sometimes a one-line summary of its point. Choose the single \
 quote that responds most directly and memorably to the target text. The bot posts \
-your first pick. Add up to {runners_up} runners-up after it, best first.
+your first pick. Add {runners_up} runners-up after it, best first. Return fewer only \
+when fewer candidates are on the topic at all; the score shows how well each one fits.
 
 Rules:
 - Pick a quote only if it answers what the target text says or argues. Sharing \
@@ -23,6 +24,10 @@ words with the target isn't enough.
 - A reply should read as a pointed answer to the target, not a lecture. Prefer a \
 quote whose point a reader gets on the first read.
 - Use different authors or works for the runners-up when the quality is similar.
+- Give each pick a score from 0 to 1 for how well it answers the target: 0.9 or more \
+is a direct, memorable answer; about 0.7 is on point but less sharp; about 0.5 is \
+on the topic but doesn't answer the argument. Score honestly: if the best candidate \
+is a loose fit, give it a low score.
 - If no candidate fits, return an empty list."""
 
 SCHEMA = {
@@ -32,8 +37,9 @@ SCHEMA = {
             "type": "array",
             "items": {
                 "type": "object",
-                "properties": {"quote_id": {"type": "integer"}, "reason": {"type": "string"}},
-                "required": ["quote_id", "reason"],
+                "properties": {"quote_id": {"type": "integer"}, "score": {"type": "number"},
+                               "reason": {"type": "string"}},
+                "required": ["quote_id", "score", "reason"],
                 "additionalProperties": False,
             },
         }
@@ -69,6 +75,14 @@ def format_quotes(quotes: list[dict]) -> str:
 PICKS = 5  # the best quote plus runners-up
 
 
+def _score(value) -> float:
+    """The model's 0 to 1 fit score, clamped. A missing or malformed score counts as 0."""
+    try:
+        return round(min(max(float(value), 0.0), 1.0), 2)
+    except (TypeError, ValueError):
+        return 0.0
+
+
 def pick(target_text: str, quotes: list[dict], point: str = None, n: int = PICKS) -> list[dict]:
     """Return validated picks from search results: [{passage, start, end, reason}], best first.
 
@@ -92,5 +106,7 @@ def pick(target_text: str, quotes: list[dict], point: str = None, n: int = PICKS
         except render.Rejected:
             continue
         picks.append({"quote_id": q["id"], "passage": q["passage"], "start": q["start"], "end": q["end"],
-                      "speaker": q.get("speaker"), "reason": raw.get("reason", "")})
+                      "speaker": q.get("speaker"), "score": _score(raw.get("score")),
+                      "reason": raw.get("reason", "")})
+    picks.sort(key=lambda p: -p["score"])  # stable, so ties keep the model's order
     return picks[:n]

@@ -267,7 +267,7 @@ def _pick(conn, text, author) -> list[dict]:
 
 def _show(choices):
     for i, c in enumerate(choices, 1):
-        title = "1 (best)" if i == 1 else f"{i} (runner-up)"
+        title = f"{i} ({'best' if i == 1 else 'runner-up'}, score {c['score']:.2f})"
         console.print(Panel(c["body"], title=title, subtitle=c["reason"], title_align="left",
                             border_style="green" if i == 1 else "dim"))
 

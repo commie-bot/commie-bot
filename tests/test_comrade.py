@@ -170,3 +170,16 @@ def test_bank_tags_match_the_schema():
 
     assert bank.TAG_SCHEMA["properties"]["quotes"]["items"]["properties"]["tags"]["items"]["enum"] == list(TAGS)
     assert all(t == t.lower() and " " not in t for t in TAGS)
+
+
+def test_picker_sorts_by_score_and_clamps(monkeypatch):
+    from comrade import llm, picker
+
+    quotes_ = [dict(PASSAGE, id=i, passage=PASSAGE, start=0, end=0, text=PASSAGE["text"], summary="") for i in (1, 2, 3)]
+    monkeypatch.setattr(llm, "complete_json", lambda *a, **k: {"picks": [
+        {"quote_id": 1, "score": 0.4, "reason": ""},
+        {"quote_id": 2, "score": 7, "reason": ""},       # out of range
+        {"quote_id": 3, "score": "high", "reason": ""},  # malformed
+    ]})
+    picks = picker.pick("text", quotes_)
+    assert [(p["quote_id"], p["score"]) for p in picks] == [(2, 1.0), (1, 0.4), (3, 0.0)]

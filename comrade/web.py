@@ -28,7 +28,6 @@ PAGE = """<!doctype html>
   .row { display: flex; gap: 8px; margin: 8px 0 20px; flex-wrap: wrap; }
   .row input { flex: 1 1 180px; width: auto; }
   .row input[type=number] { flex: 0 0 64px; width: 64px; }
-  .count { display: flex; align-items: center; gap: 6px; color: var(--muted); white-space: nowrap; }
   button { font: inherit; padding: 9px 16px; border-radius: 6px; border: 1px solid var(--line);
     background: var(--card); color: inherit; cursor: pointer; }
   button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
@@ -36,6 +35,9 @@ PAGE = """<!doctype html>
   .status { color: var(--muted); margin-bottom: 12px; min-height: 1.5em; }
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin-bottom: 12px; }
   .meta { color: var(--muted); font-size: 13px; margin-bottom: 6px; display: flex; gap: 12px; flex-wrap: wrap; }
+  .pager { display: flex; align-items: center; justify-content: center; gap: 12px; color: var(--muted); }
+  .pager:empty { display: none; }
+  .score { color: var(--accent); font-weight: 600; }
   .cite { font-weight: 600; margin-top: 8px; }
   .cite a { color: inherit; }
   .quote { font-size: 16px; border-left: 3px solid var(--accent); padding-left: 12px; }
@@ -57,12 +59,12 @@ PAGE = """<!doctype html>
 <textarea id="text" placeholder="Paste a Reddit post or comment"></textarea>
 <div class="row">
   <input id="author" placeholder="Author filter (optional), such as lenin">
-  <label class="count">Show <input id="k" type="number" value="5" min="1" max="50"> quotes</label>
   <button id="search">Search</button>
   <button id="pick" class="primary">Pick quotes with the LLM</button>
 </div>
 <div class="status" id="status"></div>
 <div id="results"></div>
+<div class="pager" id="pager"></div>
 </main>
 <script>
 const $ = id => document.getElementById(id);
@@ -73,40 +75,64 @@ function cite(p) {
   const section = p.section && p.section.toLowerCase() !== p.title.toLowerCase() ? `, ${esc(p.section)}` : "";
   return `${who}, ${title}${section}${p.year ? ` (${esc(p.year)})` : ""}`;
 }
+const PAGE_SIZE = 10;
+let found = [], page = 0;  // search results, paged in the browser
+const pickCard = (p, i) => `
+  <div class="card">
+    <div class="meta"><span>${i ? "#" + (i + 1) + " runner-up" : "Best"}</span><span class="score">score ${p.score.toFixed(2)}</span><span>quote ${p.quote_id}</span></div>
+    <div class="quote">${esc(p.quote)}</div>
+    <div class="cite">${cite(p)}</div>
+    <div class="reason">${esc(p.reason)}</div>
+    <details><summary>Reddit reply</summary><pre>${esc(p.body)}</pre></details>
+  </div>`;
+const searchCard = (p, i) => `
+  <div class="card">
+    <div class="meta"><span>#${i + 1}</span><span>score ${p.score.toFixed(4)}</span>
+      <span>${p.rating == null ? "unrated" : "rated " + p.rating}</span><span>quote ${p.id}</span></div>
+    <div class="quote">${esc(p.text)}</div>
+    <div class="cite">${cite(p)}</div>
+    ${p.summary ? `<div class="reason">${esc(p.summary)}</div>` : ""}
+  </div>`;
+function showPage(n) {
+  const pages = Math.ceil(found.length / PAGE_SIZE);
+  page = Math.max(0, Math.min(n, pages - 1));
+  const first = page * PAGE_SIZE;
+  $("results").innerHTML = found.slice(first, first + PAGE_SIZE).map((p, i) => searchCard(p, first + i)).join("") || "<p>No results.</p>";
+  $("pager").innerHTML = pages > 1 ? `
+    <button id="prev" ${page ? "" : "disabled"}>Previous</button>
+    <span>Page ${page + 1} of ${pages}</span>
+    <button id="next" ${page < pages - 1 ? "" : "disabled"}>Next</button>` : "";
+  if (pages > 1) {
+    $("prev").onclick = () => { showPage(page - 1); scrollTo(0, $("results").offsetTop - 16); };
+    $("next").onclick = () => { showPage(page + 1); scrollTo(0, $("results").offsetTop - 16); };
+  }
+}
 async function run(mode) {
   const text = $("text").value.trim();
   if (!text) return;
   for (const b of document.querySelectorAll("button")) b.disabled = true;
   $("status").textContent = mode === "pick" ? "Searching and asking the LLM..." : "Searching...";
-  $("results").innerHTML = "";
+  $("results").innerHTML = $("pager").innerHTML = "";
+  found = [];
   const t0 = performance.now();
   try {
     const r = await fetch("/api/" + mode, { method: "POST", headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ text, author: $("author").value.trim() || null, k: +$("k").value || 5 }) });
+      body: JSON.stringify({ text, author: $("author").value.trim() || null }) });
     const data = await r.json();
     if (!r.ok) throw new Error(data.error);
     const secs = ((performance.now() - t0) / 1000).toFixed(1);
     $("status").textContent = `${data.results.length} results in ${secs} s` + (data.warning ? ` (${data.warning})` : "")
       + (data.plan ? `. Tags: ${data.plan.tags.join(", ") || "none"}. Point: ${data.plan.point}` : "");
-    $("results").innerHTML = data.results.map((p, i) => mode === "pick" ? `
-      <div class="card">
-        <div class="meta"><span>${i ? "#" + (i + 1) + " runner-up" : "Best"}</span><span>quote ${p.quote_id}</span></div>
-        <div class="quote">${esc(p.quote)}</div>
-        <div class="cite">${cite(p)}</div>
-        <div class="reason">${esc(p.reason)}</div>
-        <details><summary>Reddit reply</summary><pre>${esc(p.body)}</pre></details>
-      </div>` : `
-      <div class="card">
-        <div class="meta"><span>#${i + 1}</span><span>score ${p.score.toFixed(4)}</span>
-          <span>${p.rating == null ? "unrated" : "rated " + p.rating}</span><span>quote ${p.id}</span></div>
-        <div class="quote">${esc(p.text)}</div>
-        <div class="cite">${cite(p)}</div>
-        ${p.summary ? `<div class="reason">${esc(p.summary)}</div>` : ""}
-      </div>`).join("") || "<p>No results.</p>";
+    if (mode === "pick") {
+      $("results").innerHTML = data.results.map(pickCard).join("") || "<p>No results.</p>";
+    } else {
+      found = data.results;
+      showPage(0);
+    }
   } catch (e) {
     $("status").textContent = "Error: " + e.message;
   } finally {
-    for (const b of document.querySelectorAll("button")) b.disabled = false;
+    for (const b of document.querySelectorAll("button:not(#prev):not(#next)")) b.disabled = false;
   }
 }
 const seen = {};  // job name -> [time, done] from the first poll that saw it running, for the time estimate
@@ -141,11 +167,14 @@ $("text").addEventListener("keydown", e => { if (e.key === "Enter" && (e.metaKey
 </body></html>
 """
 
+SEARCH_RESULTS = 100  # the page shows these 10 at a time
+
 FIELDS = ("id", "author", "title", "section", "year", "source_url")
 
 
 def _search(conn, body, warnings):
-    return searcher.search(conn, body["text"], k=body.get("k"), author=body.get("author"), warn=warnings.append)
+    return searcher.search(conn, body["text"], k=body.get("k") or SEARCH_RESULTS, author=body.get("author"),
+                           warn=warnings.append)
 
 
 def handle_search(body):
@@ -161,21 +190,18 @@ def handle_pick(body):
         raise RuntimeError(f"No API key for {config.LLM_PROVIDER}. Set LLM_API_KEY in .env, then restart the page.")
     conn, warnings = db.connect(), []
     plan = bank.classify(body["text"])
-    n = max(1, min(int(body.get("k") or picker.PICKS), 20))
-    # Give the picker a pool at least 4 times the number of picks to choose from
-    candidates = bank.search(conn, body["text"], plan, k=max(config.CANDIDATES, n * 4),
-                             author=body.get("author"), warn=warnings.append)
+    candidates = bank.search(conn, body["text"], plan, author=body.get("author"), warn=warnings.append)
     if not candidates:
         warnings.append("no bank matches, searched all quotes")
-        candidates = _search(conn, {**body, "k": max(config.CANDIDATES, n * 4)}, warnings)
+        candidates = _search(conn, {**body, "k": config.CANDIDATES}, warnings)
     results = []
-    for p in picker.pick(body["text"], candidates, plan["point"], n) if candidates else []:
+    for p in picker.pick(body["text"], candidates, plan["point"]) if candidates else []:
         try:
             quote = render.quote_text(p["passage"], p["start"], p["end"])
         except render.Rejected as e:
             warnings.append(str(e))
             continue
-        results.append({**{f: p["passage"].get(f) for f in FIELDS}, "quote": quote, "reason": p["reason"],
+        results.append({**{f: p["passage"].get(f) for f in FIELDS}, "quote": quote, "reason": p["reason"], "score": p["score"],
                         "quote_id": p["quote_id"],
                         "start": p["start"], "end": p["end"],
                         "speaker": p.get("speaker"),
