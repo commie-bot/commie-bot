@@ -140,7 +140,7 @@ To test retrieval in a browser, run `python main.py serve` and open `http://127.
 To tell whether a change improves the bot, rate an answer key and score the bot against it:
 
 1. Run `python main.py serve` and open `http://127.0.0.1:8765/key`.
-2. For each sample post, rate every quote **Dunk**, **OK**, or **Miss**. The keys `3`, `2`, and `1` do the same. The quotes appear in random order, without the bot's scores.
+2. For each sample post, rate every quote **Dunk**, **OK**, or **Miss**. The keys `1`, `2`, and `3` do the same. The quotes appear in random order, without the bot's scores.
 3. Run `python main.py evaluate`. It runs the reply path on every post and reports how often the top pick is a quote you rated **Dunk**, and how often the search found a dunk that the top pick passed over.
 4. If the bot picks quotes you haven't rated, the command adds them to the page. Rate them, then run the command again.
 

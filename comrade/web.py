@@ -191,7 +191,7 @@ KEY_PAGE = """<!doctype html>
 <nav><a href="/">Quote finder</a><b>Answer key</b></nav>
 <p class="help">Rate how hard each quote dunks on the post, as a reply with no explanation.
 <b>Dunk</b>: you'd be glad the bot posted it. <b>OK</b>: on point, but not sharp. <b>Miss</b>: it doesn't
-answer the post, or it doesn't make sense alone. Keys: <kbd>3</kbd> Dunk, <kbd>2</kbd> OK, <kbd>1</kbd> Miss,
+answer the post, or it doesn't make sense alone. Keys: <kbd>1</kbd> Dunk, <kbd>2</kbd> OK, <kbd>3</kbd> Miss,
 <kbd>j</kbd> <kbd>k</kbd> move between quotes, <kbd>n</kbd> <kbd>p</kbd> move between posts.</p>
 <div class="steps">
   <button id="prev">Previous post</button><button id="next">Next post</button>
@@ -272,7 +272,7 @@ $("next").onclick = () => go(at + 1);
 $("todo").onclick = nextUnrated;
 document.addEventListener("keydown", e => {
   if (e.target.tagName === "TEXTAREA" || e.metaKey || e.ctrlKey || e.altKey) return;
-  if ("123".includes(e.key)) rate(cur, +e.key - 1);
+  if ("123".includes(e.key)) rate(cur, 3 - e.key);  // 1 is Dunk, matching the button order
   else if (e.key === "j") go(at, cur + 1);
   else if (e.key === "k") go(at, cur - 1);
   else if (e.key === "n") go(at + 1);
