@@ -271,6 +271,8 @@ CLASSIFY_SYSTEM = f"""You help a Reddit bot that replies to posts and comments w
 quote from a socialist or communist writer.
 
 Read the target text and return:
+- claim: what the target text asserts or complains about, in one plain sentence of at \
+most 25 words. State it the way its author means it.
 - tags: 1 to 3 topics a reply should speak to, most specific first, from this list. \
 Use a broad tag such as class-struggle or capitalism only when no specific tag fits:
 {TAG_LIST}
@@ -281,10 +283,11 @@ anything." If the target argues against socialism, the point answers that argume
 CLASSIFY_SCHEMA = {
     "type": "object",
     "properties": {
+        "claim": {"type": "string"},
         "tags": {"type": "array", "items": {"type": "string", "enum": list(TAGS)}},
         "point": {"type": "string"},
     },
-    "required": ["tags", "point"],
+    "required": ["claim", "tags", "point"],
     "additionalProperties": False,
 }
 
@@ -293,7 +296,7 @@ def classify(text: str) -> dict:
     """Tags and the ideal reply point for a post: {tags: [...], point: str}."""
     result = llm.complete_json(CLASSIFY_SYSTEM, f"<target>\n{escape(text)}\n</target>", CLASSIFY_SCHEMA)
     tags = list(dict.fromkeys(t for t in result.get("tags") or [] if t in TAGS))[:3]
-    return {"tags": tags, "point": (result.get("point") or "").strip()}
+    return {"tags": tags, "point": (result.get("point") or "").strip(), "claim": (result.get("claim") or "").strip()}
 
 
 _cache = {}

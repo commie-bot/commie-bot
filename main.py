@@ -12,9 +12,9 @@ from comrade import db
 from comrade import embed as embedder
 from comrade.sources import marxists as fetcher
 from comrade import ingest as ingester
-from comrade import picker
 from comrade import quotes
 from comrade import render
+from comrade import reply as reply_path
 from comrade import search as searcher
 from comrade.config import config
 
@@ -234,6 +234,40 @@ def serve(port):
     web.serve(port=port)
 
 
+@cli.command()
+@click.option("--build", is_flag=True, help="Only fill the quote pools of new posts in eval/key.json.")
+def evaluate(build):
+    """Grade the bot's top pick for each post in eval/key.json against your ratings.
+
+    Rate the quotes on the Answer key page of `python main.py serve` first.
+    """
+    from comrade import answerkey
+
+    if build:
+        with console.status("Finding quotes for the new posts"):
+            console.print(f"Filled the pools of {answerkey.build()} posts.")
+        return
+    with console.status("Running the reply path on every post"):
+        r = answerkey.evaluate()
+    table = Table(show_lines=False)
+    for column in ("Post", "Top pick", "Score", "Your grade", "Best found"):
+        table.add_column(column, overflow="fold")
+    name = lambda g: "not rated" if g is None else answerkey.GRADES[g]
+    for row in r["rows"]:
+        table.add_row(row["text"][:60], f'{row["author"]}: {row["quote"][:70]}',
+                      "" if row["score"] is None else f'{row["score"]:.2f}', name(row["grade"]), name(row["best"]))
+    console.print(table)
+    if not r["rated"]:
+        raise click.ClickException("No top pick has a grade yet. Rate quotes on the Answer key page first.")
+    console.print(f"Top pick is a dunk: {r['dunks']} of {r['rated']} rated posts "
+                  f"({100 * r['dunks'] / r['rated']:.0f}%). Misses: {r['misses']}. "
+                  f"Mean grade: {r['mean']:.2f} of 2.")
+    console.print(f"The search found a dunk that the top pick passed over: {r['missed_dunks']} posts.")
+    if r["rated"] < r["posts"] or r["added"]:
+        console.print(f"[yellow]{r['posts'] - r['rated']} top picks have no grade, and {r['added']} new quotes "
+                      "joined the pools. Rate them on the Answer key page, then run this again.[/]")
+
+
 def _search(conn, text, author, k=None):
     results = searcher.search(conn, text, k=k, author=author,
                                warn=lambda m: console.print(f"[yellow]{m}[/]"))
@@ -243,17 +277,12 @@ def _search(conn, text, author, k=None):
 
 
 def _pick(conn, text, author) -> list[dict]:
-    with console.status(f"Asking {config.LLM_MODEL} what the post is about"):
-        plan = bank.classify(text)
-    console.print(f"[dim]Tags: {', '.join(plan['tags']) or 'none'}. Point: {plan['point']}[/]")
-    candidates = bank.search(conn, text, plan, author=author, warn=lambda m: console.print(f"[yellow]{m}[/]"))
-    if not candidates:
-        console.print("[yellow]The quote bank has no matches. Searching all quotes.[/]")
-        candidates = _search(conn, text, author)
-    with console.status(f"Asking {config.LLM_MODEL} to pick quotes"):
-        picks = picker.pick(text, candidates, plan["point"])
+    with console.status(f"Asking {config.LLM_MODEL} to find and score quotes"):
+        result = reply_path.find(conn, text, author, warn=lambda m: console.print(f"[yellow]{m}[/]"))
+    plan = result["plan"]
+    console.print(f"[dim]Claim: {plan['claim']}\nTags: {', '.join(plan['tags']) or 'none'}. Point: {plan['point']}[/]")
     choices = []
-    for p in picks:
+    for p in result["picks"]:
         try:
             p["body"] = render.render(p["passage"], p["start"], p["end"], p.get("speaker"))
         except render.Rejected as e:

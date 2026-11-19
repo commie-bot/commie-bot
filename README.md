@@ -13,11 +13,12 @@ Ahead of time, the bot builds an index of quotes:
 To reply:
 
 1. Fetch the post or comment text.
-2. Ask an LLM for the post's topics (from the same tag list) and the point an ideal reply would make, such as "Voting for the lesser evil still keeps the ruling class in power."
+2. Ask an LLM for the claim the post makes, the post's topics (from the same tag list), and the point an ideal reply would make, such as "Voting for the lesser evil still keeps the ruling class in power."
 3. Retrieve the top 20 bank quotes: quotes with the post's tags, ranked by how close their summary is to that point, merged with plain embedding matches by reciprocal rank fusion. If the bank has no match, search all quotes instead.
-4. Ask an LLM to pick the best quote and up to 2 runners-up. The model returns only quote IDs.
-5. Build each quote from the stored sentences and check that it's an exact substring of the source paragraph.
-6. Show the best quote and the runners-up. You confirm, and the bot posts it.
+4. Ask an LLM to shortlist up to 10 of them. The model returns only quote IDs.
+5. Ask an LLM to judge each shortlisted quote alone against the post's claim. The score, from 0 to 1, is how hard the quote dunks on the post: 0.9 or more is a knockout, about 0.7 is a solid hit, and about 0.5 is on topic without engaging the argument.
+6. Build each quote from the stored sentences and check that it's an exact substring of the source paragraph.
+7. Show the 5 highest-scoring quotes. You confirm, and the bot posts it.
 
 Because the model never writes quote text, every quote is verbatim. Matching against summaries finds quotes that make the same point as a post in different words, such as "my landlord takes half my paycheck" and a passage on rent absorbing the tenant's profit.
 
@@ -134,6 +135,17 @@ To change the topic list, edit `comrade/tags.py`. Quotes already tagged keep the
 
 To test retrieval in a browser, run `python main.py serve` and open `http://127.0.0.1:8765`. Paste text, then click **Search** to see ranked quotes with their ratings and summaries, or **Pick quotes with the LLM** to see the post's tags, the reply point, and the quote the bot would post. The page listens only on your computer.
 
+## Measure the picks
+
+To tell whether a change improves the bot, rate an answer key and score the bot against it:
+
+1. Run `python main.py serve` and open `http://127.0.0.1:8765/key`.
+2. For each sample post, rate every quote **Dunk**, **OK**, or **Miss**. The keys `3`, `2`, and `1` do the same. The quotes appear in random order, without the bot's scores.
+3. Run `python main.py evaluate`. It runs the reply path on every post and reports how often the top pick is a quote you rated **Dunk**, and how often the search found a dunk that the top pick passed over.
+4. If the bot picks quotes you haven't rated, the command adds them to the page. Rate them, then run the command again.
+
+To add a sample post, use **Add a post** on the page. The posts, quotes, and ratings are in `eval/key.json`.
+
 ## Reply format
 
 ```
@@ -154,6 +166,7 @@ comrade/            retrieval, quote picking, rendering, Reddit, the test page
   sources/          downloaders (marxists.org, Castro FBIS) and the transcriber
 catalog/            work lists: marxists.yaml, castro-fbis.yaml, private.yaml
 texts/              source files: public/, fetched/, private/
+eval/               the answer key: sample posts and your ratings
 data/               the database and logs (not committed)
 tests/
 ```

@@ -1,21 +1,27 @@
-"""Ask an LLM to pick the best of the retrieved quotes.
+"""Ask an LLM to pick the best of the retrieved quotes, in two steps.
 
-The model only returns quote IDs. The quote text itself always comes from the
+1. Shortlist: one call reads every candidate and returns the ones worth a closer look.
+2. Judge: one call per shortlisted quote scores how hard it dunks on the target.
+
+Scoring each quote alone, against a stated claim, ranks better than asking one call
+to rank and score a long list. The model only returns quote IDs and scores. The quote text itself always comes from the
 database, so it can't be paraphrased or invented.
 """
+from concurrent.futures import ThreadPoolExecutor
 from xml.sax.saxutils import escape, quoteattr
 
 from comrade import llm
 from comrade import render
 
-SYSTEM = """You pick quotes for a Reddit bot that replies to posts and comments with \
-a quote from a socialist or communist writer.
+SYSTEM = """You shortlist quotes for a Reddit bot that replies to posts and comments \
+with a quote from a socialist or communist writer.
 
 You get the target text and a list of candidate quotes, each with an id, its \
-author and work, and sometimes a one-line summary of its point. Choose the single \
-quote that responds most directly and memorably to the target text. The bot posts \
-your first pick. Add {runners_up} runners-up after it, best first. Return fewer only \
-when fewer candidates are on the topic at all; the score shows how well each one fits.
+author and work, and sometimes a one-line summary of its point. Choose up to \
+{shortlist} quotes that could dunk on the target text: quotes that take apart what \
+the target says, on their own, with no explanation needed. List them best first. A \
+second step scores each one, so include every real contender. Return fewer only when \
+fewer candidates are on the topic at all.
 
 Rules:
 - Pick a quote only if it answers what the target text says or argues. Sharing \
@@ -23,12 +29,36 @@ words with the target isn't enough.
 - Prefer sharp, quotable lines over dense theory.
 - A reply should read as a pointed answer to the target, not a lecture. Prefer a \
 quote whose point a reader gets on the first read.
-- Use different authors or works for the runners-up when the quality is similar.
-- Give each pick a score from 0 to 1 for how well it answers the target: 0.9 or more \
-is a direct, memorable answer; about 0.7 is on point but less sharp; about 0.5 is \
-on the topic but doesn't answer the argument. Score honestly: if the best candidate \
-is a loose fit, give it a low score.
+- Include different authors and works when the quality is similar.
 - If no candidate fits, return an empty list."""
+
+JUDGE_SYSTEM = """You judge one quote for a Reddit bot that replies to posts and comments \
+with a quote from a socialist or communist writer. The reply is the quote alone, with \
+its citation. Nobody explains it.
+
+You get the target text, the claim it makes, and one quote. Decide how hard the quote \
+dunks on the target. Return these fields in order:
+- says: what the quote asserts when read alone, with no context, in one sentence.
+- reason: how the quote meets the claim, or why it doesn't, in one sentence.
+- score: a number from 0 to 1.
+
+Scoring. Judge the hit, not the topic match:
+- 0.9 or more: a knockout. The quote meets the target's exact argument and reverses or \
+demolishes it in a line a reader would repeat.
+- About 0.7: a solid hit. It refutes the argument, but it's less sharp, or the reader \
+must take one step to connect it.
+- About 0.5: a glancing blow. It's on the topic and on the right side, but it doesn't \
+engage the argument.
+- 0.3 or less: no hit. It only shares a subject with the target, or it doesn't make \
+sense without its original context.
+
+Rules:
+- When the target already agrees with the quote's side, such as a tenant angry at a \
+landlord, score how hard the quote hits what the target is angry at.
+- A definition, a description, or a piece of a story is not a dunk, however relevant. \
+It can't score above 0.6.
+- A long, abstract, or hedged quote can't score above 0.7.
+- Most quotes are not knockouts. Use the whole range, and use two decimal places."""
 
 SCHEMA = {
     "type": "object",
@@ -37,14 +67,20 @@ SCHEMA = {
             "type": "array",
             "items": {
                 "type": "object",
-                "properties": {"quote_id": {"type": "integer"}, "score": {"type": "number"},
-                               "reason": {"type": "string"}},
-                "required": ["quote_id", "score", "reason"],
+                "properties": {"quote_id": {"type": "integer"}, "reason": {"type": "string"}},
+                "required": ["quote_id", "reason"],
                 "additionalProperties": False,
             },
         }
     },
     "required": ["picks"],
+    "additionalProperties": False,
+}
+
+JUDGE_SCHEMA = {
+    "type": "object",
+    "properties": {"says": {"type": "string"}, "reason": {"type": "string"}, "score": {"type": "number"}},
+    "required": ["says", "reason", "score"],
     "additionalProperties": False,
 }
 
@@ -63,8 +99,7 @@ def format_candidates(passages: list[dict]) -> str:
 def format_quotes(quotes: list[dict]) -> str:
     blocks = []
     for q in quotes:
-        author = f'{q["speaker"]}, quoted by {q["author"]}' if q.get("speaker") else q["author"]
-        attrs = f'id="{q["id"]}" author={quoteattr(author)} work={quoteattr(q["title"])}'
+        attrs = f'id="{q["id"]}" author={quoteattr(_cited(q))} work={quoteattr(q["title"])}'
         if q.get("year"):
             attrs += f' year="{q["year"]}"'
         summary = f"\n<summary>{escape(q['summary'])}</summary>" if q.get("summary") else ""
@@ -72,19 +107,24 @@ def format_quotes(quotes: list[dict]) -> str:
     return "\n\n".join(blocks)
 
 
-PICKS = 5  # the best quote plus runners-up
+PICKS = 5       # the best quote plus runners-up
+SHORTLIST = 10  # quotes the judge scores one at a time
 
 
 def _score(value) -> float:
-    """The model's 0 to 1 fit score, clamped. A missing or malformed score counts as 0."""
+    """The model's 0 to 1 dunk score, clamped. A missing or malformed score counts as 0."""
     try:
         return round(min(max(float(value), 0.0), 1.0), 2)
     except (TypeError, ValueError):
         return 0.0
 
 
-def pick(target_text: str, quotes: list[dict], point: str = None, n: int = PICKS) -> list[dict]:
-    """Return validated picks from search results: [{passage, start, end, reason}], best first.
+def _cited(q: dict) -> str:
+    return f'{q["speaker"]}, quoted by {q["author"]}' if q.get("speaker") else q["author"]
+
+
+def shortlist(target_text: str, quotes: list[dict], point: str = None, n: int = SHORTLIST) -> list[dict]:
+    """Return up to n validated contenders from search results, best first, not yet scored.
 
     `point` is the reply angle from `bank.classify`, shown to the model as a hint.
     """
@@ -94,7 +134,7 @@ def pick(target_text: str, quotes: list[dict], point: str = None, n: int = PICKS
         f"<target>\n{escape(target_text)}\n</target>\n\n{hint}"
         f"<candidates>\n{format_quotes(quotes)}\n</candidates>"
     )
-    result = llm.complete_json(SYSTEM.format(runners_up=max(n - 1, 0)), user, SCHEMA)
+    result = llm.complete_json(SYSTEM.format(shortlist=n), user, SCHEMA)
 
     picks = []
     for raw in result.get("picks", []):
@@ -102,11 +142,44 @@ def pick(target_text: str, quotes: list[dict], point: str = None, n: int = PICKS
         if not q or any(p["quote_id"] == q["id"] for p in picks):
             continue  # hallucinated or repeated id
         try:
-            render.quote_text(q["passage"], q["start"], q["end"])
+            text = render.quote_text(q["passage"], q["start"], q["end"])
         except render.Rejected:
             continue
         picks.append({"quote_id": q["id"], "passage": q["passage"], "start": q["start"], "end": q["end"],
-                      "speaker": q.get("speaker"), "score": _score(raw.get("score")),
-                      "reason": raw.get("reason", "")})
-    picks.sort(key=lambda p: -p["score"])  # stable, so ties keep the model's order
+                      "speaker": q.get("speaker"), "text": text, "score": 0.0, "reason": raw.get("reason", "")})
     return picks[:n]
+
+
+def _judge_one(target_text: str, claim: str, pick: dict) -> dict:
+    p = pick["passage"]
+    author = _cited({"speaker": pick.get("speaker"), "author": p["author"]})
+    stated = f"<claim>{escape(claim)}</claim>\n\n" if claim else ""
+    user = (
+        f"<target>\n{escape(target_text)}\n</target>\n\n{stated}"
+        f"<quote author={quoteattr(author)} work={quoteattr(p['title'])}>\n{escape(pick['text'])}\n</quote>"
+    )
+    for attempt in (1, 2):  # one retry: the provider drops a connection now and then
+        try:
+            result = llm.complete_json(JUDGE_SYSTEM, user, JUDGE_SCHEMA)
+            break
+        except Exception:
+            if attempt == 2:
+                raise
+    return {**pick, "score": _score(result.get("score")), "reason": result.get("reason") or pick["reason"]}
+
+
+def judge(target_text: str, picks: list[dict], claim: str = None) -> list[dict]:
+    """Score each pick alone against the target's claim. Returns them sorted, hardest hit first."""
+    if not picks:
+        return []
+    with ThreadPoolExecutor(len(picks)) as pool:
+        scored = list(pool.map(lambda p: _judge_one(target_text, claim, p), picks))
+    return sorted(scored, key=lambda p: -p["score"])  # stable, so ties keep the shortlist order
+
+
+def pick(target_text: str, quotes: list[dict], point: str = None, n: int = PICKS, claim: str = None) -> list[dict]:
+    """Return the n best picks: [{passage, start, end, text, score, reason}], hardest hit first.
+
+    `claim` is what the target asserts, from `bank.classify`. The judge scores against it.
+    """
+    return judge(target_text, shortlist(target_text, quotes, point), claim)[:n]

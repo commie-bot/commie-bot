@@ -172,17 +172,45 @@ def test_bank_tags_match_the_schema():
     assert all(t == t.lower() and " " not in t for t in TAGS)
 
 
-def test_picker_sorts_by_score_and_clamps(monkeypatch):
+def test_picker_judges_each_quote_and_sorts_by_score(monkeypatch):
     from comrade import llm, picker
 
-    quotes_ = [dict(PASSAGE, id=i, passage=PASSAGE, start=0, end=0, text=PASSAGE["text"], summary="") for i in (1, 2, 3)]
-    monkeypatch.setattr(llm, "complete_json", lambda *a, **k: {"picks": [
-        {"quote_id": 1, "score": 0.4, "reason": ""},
-        {"quote_id": 2, "score": 7, "reason": ""},       # out of range
-        {"quote_id": 3, "score": "high", "reason": ""},  # malformed
-    ]})
-    picks = picker.pick("text", quotes_)
+    texts = ["First quote here.", "Second quote here.", "Third quote here."]
+    quotes_ = [dict(_passage(t), id=i, passage=_passage(t), start=0, end=0, text=t, summary="")
+               for i, t in enumerate(texts, 1)]
+    scores = {"First": 0.4, "Second": 7, "Third": "high"}  # in range, out of range, malformed
+
+    def fake(system, user, schema, effort=None):
+        if schema is picker.SCHEMA:
+            return {"picks": [{"quote_id": i, "reason": ""} for i in (1, 2, 3)]}
+        assert "<claim>the claim</claim>" in user
+        return {"says": "", "reason": "why", "score": next(v for k, v in scores.items() if k in user)}
+
+    monkeypatch.setattr(llm, "complete_json", fake)
+    picks = picker.pick("text", quotes_, claim="the claim")
     assert [(p["quote_id"], p["score"]) for p in picks] == [(2, 1.0), (1, 0.4), (3, 0.0)]
+    assert picks[0]["reason"] == "why"
+
+
+def test_answer_key_grades_by_quote_hash(monkeypatch, tmp_path):
+    from comrade import answerkey, quotes
+
+    monkeypatch.setattr(answerkey, "PATH", tmp_path / "key.json")
+    found = [{"text": "A quote.", "author": "Karl Marx", "title": "Capital", "year": 1867}]
+    monkeypatch.setattr(answerkey, "_contenders", lambda text: found)
+    post = answerkey.add_post("A post.")
+    h = quotes.text_hash("A quote.")
+    assert (post["id"], post["pool"][0]["hash"]) == ("p01", h)
+    answerkey.grade("p01", h, 2)
+    assert answerkey.load()["grades"] == {"p01": {h: 2}}
+    answerkey.grade("p01", h, None)
+    assert answerkey.load()["grades"] == {"p01": {}}
+    for bad in (("p01", "nope", 1), ("p01", h, 5)):
+        try:
+            answerkey.grade(*bad)
+            assert False
+        except ValueError:
+            pass
 
 
 def test_only_listed_speakers_are_credited():

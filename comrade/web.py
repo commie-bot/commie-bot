@@ -1,19 +1,18 @@
-"""A local test page: paste text, see ranked passages and the LLM's quote picks."""
+"""A local test page: paste text, see ranked passages and the LLM's quote picks.
+
+A second page, /key, is for rating the answer key in `eval/key.json`."""
 import json
 import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-from comrade import bank
+from comrade import answerkey
 from comrade import db
-from comrade import picker
 from comrade import render
+from comrade import reply
 from comrade import search as searcher
 from comrade.config import config
 
-PAGE = """<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Quote Finder</title>
-<style>
+STYLE = """
   :root { --bg: #fafaf8; --fg: #1d1d1b; --muted: #6b6b66; --card: #fff; --line: #e2e1dc; --accent: #b3261e; }
   @media (prefers-color-scheme: dark) {
     :root { --bg: #161615; --fg: #e8e7e3; --muted: #9a9993; --card: #1f1f1d; --line: #33322f; --accent: #f2766d; }
@@ -21,7 +20,8 @@ PAGE = """<!doctype html>
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, sans-serif; }
   main { max-width: 860px; margin: 0 auto; padding: 24px 16px 64px; }
-  h1 { font-size: 20px; margin: 0 0 16px; }
+  nav { display: flex; gap: 16px; font-size: 20px; margin: 0 0 16px; }
+  nav a { color: var(--muted); }
   textarea, input { width: 100%; font: inherit; color: inherit; background: var(--card);
     border: 1px solid var(--line); border-radius: 6px; padding: 10px; }
   textarea { min-height: 140px; resize: vertical; }
@@ -53,9 +53,14 @@ PAGE = """<!doctype html>
   .bar { height: 6px; background: var(--line); border-radius: 3px; margin-top: 8px; overflow: hidden; }
   .bar div { height: 100%; background: var(--accent); transition: width .5s; }
   pre { white-space: pre-wrap; font-size: 13px; background: var(--bg); padding: 8px; border-radius: 4px; }
-</style></head>
+"""
+
+PAGE = """<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quote Finder</title>
+<style>/*STYLE*/</style></head>
 <body><main>
-<h1>Quote Finder</h1>
+<nav><b>Quote finder</b><a href="/key">Answer key</a></nav>
 <div class="jobs" id="jobs"></div>
 <textarea id="text" placeholder="Paste a Reddit post or comment"></textarea>
 <div class="row">
@@ -80,7 +85,7 @@ const PAGE_SIZE = 10;
 let found = [], page = 0;  // search results, paged in the browser
 const pickCard = (p, i) => `
   <div class="card">
-    <div class="meta"><span>${i ? "#" + (i + 1) + " runner-up" : "Best"}</span><span class="score">score ${p.score.toFixed(2)}</span><span>quote ${p.quote_id}</span></div>
+    <div class="meta"><span>${i ? "#" + (i + 1) + " runner-up" : "Best"}</span><span class="score">dunk ${p.score.toFixed(2)}</span><span>quote ${p.quote_id}</span></div>
     <div class="quote">${esc(p.quote)}</div>
     <div class="cite">${cite(p)}</div>
     <div class="reason">${esc(p.reason)}</div>
@@ -123,7 +128,7 @@ async function run(mode) {
     if (!r.ok) throw new Error(data.error);
     const secs = ((performance.now() - t0) / 1000).toFixed(1);
     $("status").textContent = `${data.results.length} results in ${secs} s` + (data.warning ? ` (${data.warning})` : "")
-      + (data.plan ? `. Tags: ${data.plan.tags.join(", ") || "none"}. Point: ${data.plan.point}` : "");
+      + (data.plan ? `. Claim: ${data.plan.claim} Tags: ${data.plan.tags.join(", ") || "none"}. Point: ${data.plan.point}` : "");
     if (mode === "pick") {
       $("results").innerHTML = data.results.map(pickCard).join("") || "<p>No results.</p>";
     } else {
@@ -168,6 +173,128 @@ $("text").addEventListener("keydown", e => { if (e.key === "Enter" && (e.metaKey
 </body></html>
 """
 
+PAGE = PAGE.replace("/*STYLE*/", STYLE)
+KEY_PAGE = """<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Answer Key</title>
+<style>/*STYLE*/
+  .post { font-size: 17px; border-left: 3px solid var(--muted); }
+  .help { color: var(--muted); font-size: 13px; margin: 0 0 16px; }
+  .grades { display: flex; gap: 8px; margin-top: 10px; }
+  .grades button { padding: 5px 14px; font-size: 13px; }
+  .grades button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .card.cur { outline: 2px solid var(--accent); }
+  .steps { display: flex; gap: 8px; align-items: center; margin: 0 0 16px; flex-wrap: wrap; color: var(--muted); }
+  kbd { border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; font: 12px ui-monospace, monospace; }
+</style></head>
+<body><main>
+<nav><a href="/">Quote finder</a><b>Answer key</b></nav>
+<p class="help">Rate how hard each quote dunks on the post, as a reply with no explanation.
+<b>Dunk</b>: you'd be glad the bot posted it. <b>OK</b>: on point, but not sharp. <b>Miss</b>: it doesn't
+answer the post, or it doesn't make sense alone. Keys: <kbd>3</kbd> Dunk, <kbd>2</kbd> OK, <kbd>1</kbd> Miss,
+<kbd>j</kbd> <kbd>k</kbd> move between quotes, <kbd>n</kbd> <kbd>p</kbd> move between posts.</p>
+<div class="steps">
+  <button id="prev">Previous post</button><button id="next">Next post</button>
+  <button id="todo" class="primary">Next unrated</button><span id="progress"></span>
+</div>
+<div id="post"></div>
+<div id="pool"></div>
+<details><summary>Add a post</summary>
+  <textarea id="text" placeholder="Paste a Reddit post or comment"></textarea>
+  <div class="row"><button id="add">Add it and find quotes</button><span class="status" id="status"></span></div>
+</details>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const NAMES = ["Miss", "OK", "Dunk"];
+let key = {posts: [], grades: {}}, at = 0, cur = 0;
+const grades = () => key.grades[key.posts[at].id] ??= {};
+const unrated = post => post.pool.filter(q => (key.grades[post.id] ?? {})[q.hash] == null).length;
+function draw() {
+  const post = key.posts[at];
+  if (!post) { $("post").innerHTML = "<p>No posts yet. Add one below.</p>"; $("pool").innerHTML = ""; return; }
+  const left = key.posts.reduce((n, p) => n + unrated(p), 0), all = key.posts.reduce((n, p) => n + p.pool.length, 0);
+  $("progress").textContent = `Post ${at + 1} of ${key.posts.length} · ${all - left} of ${all} quotes rated`;
+  $("prev").disabled = at === 0;
+  $("next").disabled = at === key.posts.length - 1;
+  $("todo").disabled = left === 0;
+  $("post").innerHTML = `<div class="card"><div class="meta"><span>The post</span></div><div class="quote post">${esc(post.text)}</div></div>`;
+  $("pool").innerHTML = post.pool.map((q, i) => `
+    <div class="card ${i === cur ? "cur" : ""}" data-i="${i}">
+      <div class="quote">${esc(q.text)}</div>
+      <div class="cite">${q.speaker ? esc(q.speaker) + ", quoted in " : ""}${esc(q.author)}, <i>${esc(q.title)}</i>${q.year ? ` (${esc(q.year)})` : ""}</div>
+      <div class="grades">${[2, 1, 0].map(g =>
+        `<button data-g="${g}" class="${grades()[q.hash] === g ? "on" : ""}">${NAMES[g]}</button>`).join("")}</div>
+    </div>`).join("") || "<p>No quotes found for this post.</p>";
+}
+function go(post, quote) {
+  at = Math.max(0, Math.min(post, key.posts.length - 1));
+  const pool = key.posts[at]?.pool ?? [];
+  const first = pool.findIndex(q => grades()[q.hash] == null);
+  cur = Math.max(0, Math.min(quote ?? (first < 0 ? 0 : first), pool.length - 1));
+  draw();
+  document.querySelector(".card.cur")?.scrollIntoView({block: "nearest"});
+}
+function nextUnrated() {
+  for (let n = 0; n < key.posts.length; n++) {
+    const i = (at + n) % key.posts.length;
+    if (unrated(key.posts[i])) return go(i);
+  }
+  draw();
+}
+async function send(path, body) {
+  const r = await fetch(path, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.error);
+  return data;
+}
+async function rate(i, g) {
+  const post = key.posts[at], q = post.pool[i];
+  if (!q) return;
+  const value = grades()[q.hash] === g ? null : g;  // click the same grade again to clear it
+  try {
+    await send("/api/key/grade", {post: post.id, hash: q.hash, grade: value});
+  } catch (e) { alert("Not saved: " + e.message); return; }
+  if (value == null) delete grades()[q.hash]; else grades()[q.hash] = value;
+  const later = post.pool.findIndex((x, n) => n > i && grades()[x.hash] == null);
+  if (value != null && later < 0 && !unrated(post)) return nextUnrated();
+  go(at, value == null ? i : later < 0 ? post.pool.findIndex(x => grades()[x.hash] == null) : later);
+}
+$("pool").onclick = e => {
+  const card = e.target.closest(".card");
+  if (!card) return;
+  if (e.target.dataset.g != null) rate(+card.dataset.i, +e.target.dataset.g);
+  else go(at, +card.dataset.i);
+};
+$("prev").onclick = () => go(at - 1);
+$("next").onclick = () => go(at + 1);
+$("todo").onclick = nextUnrated;
+document.addEventListener("keydown", e => {
+  if (e.target.tagName === "TEXTAREA" || e.metaKey || e.ctrlKey || e.altKey) return;
+  if ("123".includes(e.key)) rate(cur, +e.key - 1);
+  else if (e.key === "j") go(at, cur + 1);
+  else if (e.key === "k") go(at, cur - 1);
+  else if (e.key === "n") go(at + 1);
+  else if (e.key === "p") go(at - 1);
+});
+$("add").onclick = async () => {
+  const text = $("text").value.trim();
+  if (!text) return;
+  $("add").disabled = true;
+  $("status").textContent = "Finding quotes...";
+  try {
+    key.posts.push(await send("/api/key/post", {text}));
+    $("text").value = $("status").textContent = "";
+    go(key.posts.length - 1);
+  } catch (e) { $("status").textContent = "Error: " + e.message; }
+  $("add").disabled = false;
+};
+fetch("/api/key").then(r => r.json()).then(data => { key = data; nextUnrated(); });
+</script>
+</body></html>
+""".replace("/*STYLE*/", STYLE)
+
 SEARCH_RESULTS = 100  # the page shows these 10 at a time
 
 FIELDS = ("id", "author", "title", "section", "year", "source_url")
@@ -189,14 +316,10 @@ def handle_search(body):
 def handle_pick(body):
     if config.LLM_PROVIDER in ("cerebras", "anthropic") and not (config.LLM_API_KEY or os.getenv("ANTHROPIC_API_KEY")):
         raise RuntimeError(f"No API key for {config.LLM_PROVIDER}. Set LLM_API_KEY in .env, then restart the page.")
-    conn, warnings = db.connect(), []
-    plan = bank.classify(body["text"])
-    candidates = bank.search(conn, body["text"], plan, author=body.get("author"), warn=warnings.append)
-    if not candidates:
-        warnings.append("no bank matches, searched all quotes")
-        candidates = _search(conn, {**body, "k": config.CANDIDATES}, warnings)
+    warnings = []
+    found = reply.find(db.connect(), body["text"], body.get("author"), warn=warnings.append)
     results = []
-    for p in picker.pick(body["text"], candidates, plan["point"]) if candidates else []:
+    for p in found["picks"]:
         try:
             quote = render.quote_text(p["passage"], p["start"], p["end"])
         except render.Rejected as e:
@@ -207,7 +330,7 @@ def handle_pick(body):
                         "start": p["start"], "end": p["end"],
                         "speaker": p.get("speaker"),
                         "body": render.render(p["passage"], p["start"], p["end"], p.get("speaker"))})
-    return {"results": results, "plan": plan, "warning": "; ".join(warnings)}
+    return {"results": results, "plan": found["plan"], "warning": "; ".join(warnings)}
 
 
 def _running(command: str) -> bool:
@@ -253,7 +376,16 @@ def handle_status():
     return _status_cache["body"]
 
 
-ROUTES = {"/api/search": handle_search, "/api/pick": handle_pick}
+def handle_grade(body):
+    answerkey.grade(body.get("post"), body.get("hash"), body.get("grade"))
+    return {"ok": True}
+
+
+ROUTES = {"/api/search": handle_search, "/api/pick": handle_pick,
+          "/api/key/post": lambda body: answerkey.add_post(body["text"].strip()), "/api/key/grade": handle_grade}
+NEEDS_TEXT = {"/api/search", "/api/pick", "/api/key/post"}
+PAGES = {"/": PAGE, "/key": KEY_PAGE}
+GETS = {"/api/status": handle_status, "/api/key": answerkey.load}
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -266,11 +398,11 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(data)
 
     def do_GET(self):
-        if self.path == "/":
-            self._send(200, PAGE, "text/html")
-        elif self.path == "/api/status":
+        if self.path in PAGES:
+            self._send(200, PAGES[self.path], "text/html")
+        elif self.path in GETS:
             try:
-                self._send(200, handle_status())
+                self._send(200, GETS[self.path]())
             except Exception as e:
                 self._send(500, {"error": f"{type(e).__name__}: {e}"})
         else:
@@ -282,9 +414,11 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(404, {"error": "Not found"})
         try:
             body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or "{}")
-            if not (body.get("text") or "").strip():
+            if self.path in NEEDS_TEXT and not (body.get("text") or "").strip():
                 return self._send(400, {"error": "Paste some text first."})
             self._send(200, route(body))
+        except ValueError as e:
+            self._send(400, {"error": str(e)})
         except RuntimeError as e:
             self._send(500, {"error": str(e)})
         except Exception as e:
