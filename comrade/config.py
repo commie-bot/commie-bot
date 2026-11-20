@@ -42,8 +42,13 @@ class Config:
     MAX_SPAN: int = 4  # max sentences per quote
     MAX_QUOTE_CHARS: int = int(os.getenv("COMRADE_MAX_QUOTE_CHARS", "450"))
     # Looser limits for the quote bank, where the tagging pass can extend a quote to complete the thought
-    BANK_MAX_SPAN: int = 5
-    BANK_MAX_CHARS: int = int(os.getenv("COMRADE_BANK_MAX_CHARS", "550"))
+    BANK_MAX_SPAN: int = 8
+    BANK_MAX_CHARS: int = int(os.getenv("COMRADE_BANK_MAX_CHARS", "800"))
+    # Limits for the long-quote pass (`rate --long`), which looks for whole arguments. These quotes
+    # come only from the LLM, never from the automatic candidates, so they add little to embed.
+    LONG_MAX_SPAN: int = 8
+    LONG_MIN_CHARS: int = 300
+    LONG_MAX_CHARS: int = int(os.getenv("COMRADE_LONG_MAX_CHARS", "800"))
 
 
 config = Config()

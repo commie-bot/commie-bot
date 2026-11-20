@@ -117,16 +117,17 @@ def embed():
 @click.option("--author", help="Only rate this author's paragraphs (substring match).")
 @click.option("--limit", type=int, help="Stop after this many paragraphs.")
 @click.option("--workers", default=8, show_default=True, help="Parallel LLM requests.")
-def rate(author, limit, workers):
+@click.option("--long", is_flag=True, help="Look for longer quotes that make a whole argument, instead.")
+def rate(author, limit, workers, long):
     """Rate quote candidates with the LLM and write summaries. Resumes where it stopped."""
     conn = db.connect()
-    todo = len(quotes._unrated(conn, author)[:limit])
+    todo = len(quotes._unrated(conn, author, long)[:limit])
     if not todo:
         console.print(f"All paragraphs are rated with {config.LLM_MODEL}.")
         return
     with Progress(console=console) as progress:
-        task = progress.add_task(f"Rating with {config.LLM_MODEL}", total=todo)
-        rated, chosen = quotes.rate(conn, author, limit, workers=workers,
+        task = progress.add_task(f"{'Finding long quotes' if long else 'Rating'} with {config.LLM_MODEL}", total=todo)
+        rated, chosen = quotes.rate(conn, author, limit, workers=workers, long=long,
                                     progress=lambda n: progress.advance(task, n),
                                     warn=lambda m: console.print(f"[yellow]{m}[/]"))
     console.print(f"Rated {rated} paragraphs and chose {chosen} quotes. Run [bold]python main.py embed[/] next.")

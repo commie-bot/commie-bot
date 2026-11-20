@@ -355,6 +355,12 @@ def handle_status():
         {"name": "rate", "label": "Rating quotes",
          "done": one("SELECT COUNT(*) FROM rated_paragraphs WHERE model = ?", quotes._rated_key()),
          "total": one("SELECT COUNT(DISTINCT paragraph_id) FROM quotes")},
+        {"name": "rate --long", "label": "Finding longer quotes",
+         "done": one("SELECT COUNT(*) FROM rated_paragraphs WHERE model = ?", quotes._rated_key(long=True)),
+         "total": one("""SELECT COUNT(*) FROM paragraphs p WHERE LENGTH(p.text) > ?
+                         AND p.id IN (SELECT paragraph_id FROM quotes)
+                         AND (SELECT COUNT(*) FROM sentences s WHERE s.paragraph_id = p.id) >= 3""",
+                      config.MAX_QUOTE_CHARS)},
         {"name": "embed", "label": "Embedding quotes and summaries",
          "done": one("SELECT COUNT(*) FROM quote_vectors WHERE model = ?", config.EMBED_MODEL),
          "total": one("SELECT COUNT(DISTINCT hash) FROM quotes")
@@ -370,7 +376,7 @@ def handle_status():
     jobs.append({"name": "attribute", "label": "Checking who said each quote", "done": done, "total": len(texts),
                  "note": f"{others:,} so far are someone else's words"})
     for j in jobs:
-        j["running"] = _running(j["name"])
+        j["running"] = _running(j["name"]) and not (j["name"] == "rate" and _running("rate --long"))
         j["done"] = min(j["done"], j["total"])
     _status_cache.update(at=time.time(), body={"jobs": jobs})
     return _status_cache["body"]

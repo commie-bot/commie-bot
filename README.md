@@ -6,9 +6,10 @@ Ahead of time, the bot builds an index of quotes:
 
 1. Split every work into paragraphs and sentences.
 2. Extract quote candidates: every run of 1 to 4 sentences, under 450 characters, that can stand alone. Rules drop spans that open with a word like "This" or "Thus", fragments, statistics, and words the author quotes from someone else.
-3. Optional: an LLM reads every paragraph once, rates its best quotes from 3 to 5, and writes a one-line summary of each quote's point in plain modern English.
+3. Optional: an LLM reads every paragraph once, rates its best quotes from 3 to 5, and writes a one-line summary of each quote's point in plain modern English. A second, optional pass (`rate --long`) reads the longer paragraphs again and looks for whole arguments: 3 to 8 sentences and 300 to 800 characters.
 4. Embed each quote and each summary with Ollama.
-5. Build the quote bank: an LLM reviews every quote rated 3 or higher, keeps the ones a reader understands without knowing the source, and tags each with 1 to 4 topics from `comrade/tags.py`, such as `landlords-housing` or `reform-vs-revolution`. It can extend a quote with neighboring sentences, up to 5 sentences and 550 characters.
+5. Build the quote bank: an LLM reviews every quote rated 3 or higher, keeps the ones a reader understands without knowing the source, and tags each with 1 to 4 topics from `comrade/tags.py`, such as `landlords-housing` or `reform-vs-revolution`. It can extend a quote with neighboring sentences, up to 8 sentences and 800 characters.
+6. Check whose words each bank quote is (`attribute`). A quote the author took from someone else stays only when the speaker is on the list in `comrade/speakers.py`, and the reply credits that speaker: **Frederick Douglass**, quoted in Howard Zinn, *A People's History of the United States*.
 
 To reply:
 
@@ -119,15 +120,17 @@ python main.py fetch                  # download works that have a url
 python main.py ingest                 # parse all works (re-running replaces them)
 python main.py ingest --work manifesto
 python main.py rate                   # LLM ratings and summaries (resumes; about $11 for the full corpus on Cerebras)
+python main.py rate --long            # also find longer quotes that make a whole argument (resumes)
 python main.py embed                  # embed new quotes and summaries
 python main.py tag                    # build the quote bank (resumes; about $5 for the full corpus on Cerebras)
+python main.py attribute              # check whose words each bank quote is (resumes)
 python main.py search "landlords are parasites"        # retrieval only
 python main.py quote "landlords are parasites"         # retrieval + LLM, no Reddit
 python main.py reply <reddit-url> --dry-run
 python main.py reply <reddit-url> --author lenin
 ```
 
-`ingest` also extracts the quote candidates. After you add works, run `rate`, `embed`, and then `tag`. Ratings, vectors, and bank decisions are stored by a hash of the quote text, so re-ingesting a work doesn't redo them. Without `rate` and `tag`, replies fall back to searching all quotes.
+`ingest` also extracts the quote candidates. After you add works, run `rate`, `rate --long`, `embed`, `tag`, and then `attribute`. Ratings, vectors, and bank decisions are stored by a hash of the quote text, so re-ingesting a work doesn't redo them. Without `rate` and `tag`, replies fall back to searching all quotes.
 
 To change the topic list, edit `comrade/tags.py`. Quotes already tagged keep their old tags until you clear the `bank_reviewed` table and run `tag` again.
 
