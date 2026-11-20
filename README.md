@@ -16,7 +16,7 @@ To reply:
 2. Ask an LLM for the claim the post makes, the post's topics (from the same tag list), and the point an ideal reply would make, such as "Voting for the lesser evil still keeps the ruling class in power."
 3. Retrieve the top 20 bank quotes: quotes with the post's tags, ranked by how close their summary is to that point, merged with plain embedding matches by reciprocal rank fusion. If the bank has no match, search all quotes instead.
 4. Ask an LLM to shortlist up to 10 of them. The model returns only quote IDs.
-5. Ask an LLM to judge each shortlisted quote alone against the post's claim. The score, from 0 to 1, is how hard the quote dunks on the post: 0.9 or more is a knockout, about 0.7 is a solid hit, and about 0.5 is on topic without engaging the argument.
+5. Ask an LLM to judge the shortlisted quotes against the post's claim. It states what each quote says before it scores it, and it sees quotes you rated for other posts. The score, from 0 to 1, is how hard the quote dunks on the post: 0.9 or more is a knockout, about 0.7 is a solid hit, and about 0.5 is on topic without engaging the argument.
 6. Build each quote from the stored sentences and check that it's an exact substring of the source paragraph.
 7. Show the 5 highest-scoring quotes. You confirm, and the bot posts it.
 
@@ -141,8 +141,11 @@ To tell whether a change improves the bot, rate an answer key and score the bot 
 
 1. Run `python main.py serve` and open `http://127.0.0.1:8765/key`.
 2. For each sample post, rate every quote **Dunk**, **OK**, or **Miss**. The keys `1`, `2`, and `3` do the same. The quotes appear in random order, without the bot's scores.
-3. Run `python main.py evaluate`. It runs the reply path on every post and reports how often the top pick is a quote you rated **Dunk**, and how often the search found a dunk that the top pick passed over.
-4. If the bot picks quotes you haven't rated, the command adds them to the page. Rate them, then run the command again.
+3. Run `python main.py evaluate`. For each post, it gives the judge the quotes you rated and grades the one the judge scores highest. It reports how often that quote is one you rated **Dunk**, compared with a random pick. The judge varies between runs, so the command judges each post 3 times.
+
+The judge also learns from the key. For each reply, it sees a few posts with quotes you rated, as examples of your taste. `evaluate` leaves the post under test out of those examples.
+
+The command measures the scoring step only. The search and the shortlist decided which quotes are in each pool.
 
 To add a sample post, use **Add a post** on the page. The posts, quotes, and ratings are in `eval/key.json`.
 

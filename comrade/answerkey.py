@@ -11,13 +11,17 @@ import threading
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+from xml.sax.saxutils import escape, quoteattr
+
 from comrade import db
+from comrade import picker
 from comrade import quotes
-from comrade import reply
 
 PATH = Path(__file__).resolve().parent.parent / "eval" / "key.json"
 GRADES = {0: "Miss", 1: "OK", 2: "Dunk"}
 RETRIEVED = 5  # top search results added to each pool, beside the shortlist
+EXAMPLE_POSTS = 5                  # rated posts shown to the judge
+SHOWN_AS = {2: 0.9, 1: 0.6, 0: 0.2}  # the score a grade stands for in an example
 
 _lock = threading.Lock()
 
@@ -55,6 +59,8 @@ def _contenders(text: str) -> list[dict]:
 
     The order is shuffled so the position on the page doesn't hint at the bot's ranking.
     """
+    from comrade import reply  # reply imports this module for the examples
+
     result = reply.find(db.connect(), text, judge=False)
     found = result["picks"] + result["candidates"][:RETRIEVED]
     random.Random(text).shuffle(found)
@@ -104,45 +110,77 @@ def grade(post_id: str, quote_hash: str, value) -> None:
         _save(key)
 
 
-def evaluate(workers: int = 6) -> dict:
-    """Run the reply path on every post and grade its top pick against the key.
+def _rated(key: dict) -> list[tuple[dict, list[dict]]]:
+    """Each post with the pool quotes that have a grade."""
+    out = []
+    for post in key["posts"]:
+        grades = key["grades"].get(post["id"], {})
+        rated = [dict(e, grade=grades[e["hash"]]) for e in post["pool"] if e["hash"] in grades]
+        if rated:
+            out.append((post, rated))
+    return out
 
-    A top pick or runner-up you haven't rated joins the pool, so the page shows it next.
+
+def examples(text: str, n: int = EXAMPLE_POSTS) -> str:
+    """Rated quotes for n other posts, as examples of the owner's taste for the judge.
+
+    The post with this text is left out, so `evaluate` never shows the judge the answers.
+    The choice is seeded by the text, so the same post always gets the same examples.
     """
-    key = load()
-    texts = [p["text"] for p in key["posts"]]
+    rng = random.Random(text)
+    others = [(p, rated) for p, rated in _rated(load()) if p["text"] != text]
+    blocks = []
+    for post, rated in rng.sample(others, min(n, len(others))):
+        lines = []
+        for g in sorted(SHOWN_AS, reverse=True):
+            graded = [e for e in rated if e["grade"] == g]
+            if graded:
+                e = rng.choice(graded)
+                lines.append(f'<quote author={quoteattr(e["author"])} score="{SHOWN_AS[g]}">{escape(e["text"])}</quote>')
+        blocks.append(f"<example>\n<target>{escape(post['text'])}</target>\n" + "\n".join(lines) + "\n</example>")
+    return "\n\n".join(blocks)
+
+
+def _order(scores: list[float], grades: list[int]):
+    """How often a better-graded quote outscores a worse one: 1 is perfect, 0.5 is chance."""
+    pairs = [(a, b) for a, ga in zip(scores, grades) for b, gb in zip(scores, grades) if ga > gb]
+    return sum(1 if a > b else 0.5 if a == b else 0 for a, b in pairs) / len(pairs) if pairs else None
+
+
+def evaluate(runs: int = 3, workers: int = 6) -> dict:
+    """Measure the judge: give it each post's rated quotes and grade the one it scores highest.
+
+    Every quote the judge can pick has a grade, so no run leaves a pick unmeasured. This
+    tests the scoring step only. The search and the shortlist decided what's in the pools.
+    The judge varies between runs, so the result is the mean of several.
+    """
+    from comrade import bank
+
+    posts = _rated(load())
+    mean = lambda values: sum(values) / len(values) if values else None
+
+    def one(item):
+        post, rated = item
+        picks = [{"text": e["text"], "passage": {"author": e["author"], "title": e["title"]},
+                  "speaker": e["speaker"], "grade": e["grade"], "reason": ""} for e in rated]
+        claim = bank.classify(post["text"])["claim"]
+        tops, orders = [], []
+        for _ in range(runs):
+            scored = picker.judge(post["text"], picks, claim, examples(post["text"]))
+            tops.append(scored[0])
+            orders.append(_order([p["score"] for p in scored], [p["grade"] for p in scored]))
+        grades = [t["grade"] for t in tops]
+        return {"id": post["id"], "text": post["text"], "quote": tops[0]["text"], "author": tops[0]["passage"]["author"],
+                "score": tops[0]["score"], "grades": grades, "order": mean([o for o in orders if o is not None]),
+                "dunks_in_pool": sum(e["grade"] == 2 for e in rated), "pool": len(rated)}
+
     with ThreadPoolExecutor(workers) as pool:
-        results = dict(zip(texts, pool.map(lambda t: reply.find(db.connect(), t), texts)))
-
-    rows, added = [], 0
-    with _lock:
-        key = load()
-        for post in key["posts"]:
-            result = results.get(post["text"])
-            if result is None:
-                continue
-            grades = key["grades"].get(post["id"], {})
-            picks = result["picks"]
-            added += _extend(post, picks)
-            top = picks[0] if picks else None
-            # the best grade among everything the search returned: the most the picker could have scored
-            reachable = [grades[h] for h in (quotes.text_hash(c["text"]) for c in result["candidates"]) if h in grades]
-            rows.append({
-                "id": post["id"], "text": post["text"],
-                "quote": top["text"] if top else "", "author": top["passage"]["author"] if top else "",
-                "score": top["score"] if top else None,
-                "grade": grades.get(quotes.text_hash(top["text"])) if top else 0,
-                "best": max(reachable) if reachable else None,
-            })
-        _save(key)
-
-    rated = [r for r in rows if r["grade"] is not None]
-    count = lambda rs, test: sum(1 for r in rs if test(r))
+        rows = list(pool.map(one, posts))
+    picks = [g for r in rows for g in r["grades"]]
     return {
-        "rows": rows, "posts": len(rows), "rated": len(rated), "added": added,
-        "dunks": count(rated, lambda r: r["grade"] == 2),
-        "misses": count(rated, lambda r: r["grade"] == 0),
-        "mean": sum(r["grade"] for r in rated) / len(rated) if rated else None,
-        # posts where the search found a dunk but the top pick wasn't one
-        "missed_dunks": count(rated, lambda r: r["best"] == 2 and r["grade"] < 2),
+        "rows": rows, "posts": len(rows), "runs": runs,
+        "dunk_rate": mean([g == 2 for g in picks]), "miss_rate": mean([g == 0 for g in picks]),
+        "mean": mean(picks), "order": mean([r["order"] for r in rows if r["order"] is not None]),
+        "chance": mean([r["dunks_in_pool"] / r["pool"] for r in rows]),  # a random pick's dunk rate
+        "unrated": sum(len(p["pool"]) for p in load()["posts"]) - sum(r["pool"] for r in rows),
     }

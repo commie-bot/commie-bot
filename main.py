@@ -236,8 +236,9 @@ def serve(port):
 
 @cli.command()
 @click.option("--build", is_flag=True, help="Only fill the quote pools of new posts in eval/key.json.")
-def evaluate(build):
-    """Grade the bot's top pick for each post in eval/key.json against your ratings.
+@click.option("--runs", default=3, show_default=True, help="Times to judge each post. The judge varies between runs.")
+def evaluate(build, runs):
+    """Measure the judge against your ratings in eval/key.json.
 
     Rate the quotes on the Answer key page of `python main.py serve` first.
     """
@@ -247,25 +248,23 @@ def evaluate(build):
         with console.status("Finding quotes for the new posts"):
             console.print(f"Filled the pools of {answerkey.build()} posts.")
         return
-    with console.status("Running the reply path on every post"):
-        r = answerkey.evaluate()
+    with console.status(f"Judging the rated quotes for every post, {runs} times"):
+        r = answerkey.evaluate(runs)
+    if not r["posts"]:
+        raise click.ClickException("No quote has a grade yet. Rate quotes on the Answer key page first.")
     table = Table(show_lines=False)
-    for column in ("Post", "Top pick", "Score", "Your grade", "Best found"):
+    for column in ("Post", "Top pick, first run", "Your grade, each run", "Dunks in pool"):
         table.add_column(column, overflow="fold")
-    name = lambda g: "not rated" if g is None else answerkey.GRADES[g]
     for row in r["rows"]:
         table.add_row(row["text"][:60], f'{row["author"]}: {row["quote"][:70]}',
-                      "" if row["score"] is None else f'{row["score"]:.2f}', name(row["grade"]), name(row["best"]))
+                      ", ".join(answerkey.GRADES[g] for g in row["grades"]), f'{row["dunks_in_pool"]} of {row["pool"]}')
     console.print(table)
-    if not r["rated"]:
-        raise click.ClickException("No top pick has a grade yet. Rate quotes on the Answer key page first.")
-    console.print(f"Top pick is a dunk: {r['dunks']} of {r['rated']} rated posts "
-                  f"({100 * r['dunks'] / r['rated']:.0f}%). Misses: {r['misses']}. "
-                  f"Mean grade: {r['mean']:.2f} of 2.")
-    console.print(f"The search found a dunk that the top pick passed over: {r['missed_dunks']} posts.")
-    if r["rated"] < r["posts"] or r["added"]:
-        console.print(f"[yellow]{r['posts'] - r['rated']} top picks have no grade, and {r['added']} new quotes "
-                      "joined the pools. Rate them on the Answer key page, then run this again.[/]")
+    console.print(f"Top pick is a dunk: {100 * r['dunk_rate']:.0f}% of {r['posts']} posts, over {r['runs']} runs. "
+                  f"A random pick: {100 * r['chance']:.0f}%.")
+    console.print(f"Top pick is a miss: {100 * r['miss_rate']:.0f}%. Mean grade: {r['mean']:.2f} of 2. "
+                  f"Ordering: {r['order']:.2f} (1 is perfect, 0.5 is chance).")
+    if r["unrated"]:
+        console.print(f"[dim]{r['unrated']} pool quotes have no grade and were left out.[/]")
 
 
 def _search(conn, text, author, k=None):

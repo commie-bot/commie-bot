@@ -183,13 +183,25 @@ def test_picker_judges_each_quote_and_sorts_by_score(monkeypatch):
     def fake(system, user, schema, effort=None):
         if schema is picker.SCHEMA:
             return {"picks": [{"quote_id": i, "reason": ""} for i in (1, 2, 3)]}
-        assert "<claim>the claim</claim>" in user
-        return {"says": "", "reason": "why", "score": next(v for k, v in scores.items() if k in user)}
+        assert "<claim>the claim</claim>" in user and "rated example" in system
+        return {"quotes": [{"id": i, "says": "", "reason": "why", "score": v} for i, v in enumerate(scores.values(), 1)]}
 
     monkeypatch.setattr(llm, "complete_json", fake)
-    picks = picker.pick("text", quotes_, claim="the claim")
+    picks = picker.pick("text", quotes_, claim="the claim", examples="rated example")
     assert [(p["quote_id"], p["score"]) for p in picks] == [(2, 1.0), (1, 0.4), (3, 0.0)]
     assert picks[0]["reason"] == "why"
+
+
+def test_answer_key_examples_leave_out_the_post_itself(monkeypatch):
+    from comrade import answerkey
+
+    posts = [{"id": f"p{i}", "text": f"Post {i}.", "pool": [{"hash": f"h{i}", "text": f"Quote {i}.", "author": "A", "title": "T"}]}
+             for i in (1, 2, 3)]
+    monkeypatch.setattr(answerkey, "load", lambda: {"posts": posts, "grades": {"p1": {"h1": 2}, "p2": {"h2": 0}}})
+    shown = answerkey.examples("Post 1.")
+    assert "Quote 2." in shown and 'score="0.2"' in shown
+    assert "Quote 1." not in shown and "Quote 3." not in shown  # the post itself, and an unrated quote
+    assert answerkey._order([0.9, 0.5, 0.1], [2, 1, 0]) == 1.0
 
 
 def test_answer_key_grades_by_quote_hash(monkeypatch, tmp_path):
