@@ -237,8 +237,9 @@ def serve(port):
 
 @cli.command()
 @click.option("--build", is_flag=True, help="Only fill the quote pools of new posts in eval/key.json.")
+@click.option("--add-picks", is_flag=True, help="Only add the bot's current picks for every post to the pools, to rate.")
 @click.option("--runs", default=3, show_default=True, help="Times to judge each post. The judge varies between runs.")
-def evaluate(build, runs):
+def evaluate(build, add_picks, runs):
     """Measure the judge against your ratings in eval/key.json.
 
     Rate the quotes on the Answer key page of `python main.py serve` first.
@@ -248,6 +249,13 @@ def evaluate(build, runs):
     if build:
         with console.status("Finding quotes for the new posts"):
             console.print(f"Filled the pools of {answerkey.build()} posts.")
+        return
+    if add_picks:
+        with console.status("Running the reply path on every post"):
+            r = answerkey.add_picks()
+        console.print(f"Added {r['added']} new quotes to the pools, from {r['picks']} picks. "
+                      f"{r['long']} of the picks are longer than {config.MAX_QUOTE_CHARS} characters. "
+                      "Rate the new ones on the Answer key page.")
         return
     with console.status(f"Judging the rated quotes for every post, {runs} times"):
         r = answerkey.evaluate(runs)

@@ -93,6 +93,26 @@ def build(workers: int = 6) -> int:
     return len(found)
 
 
+def add_picks(workers: int = 6) -> dict:
+    """Run the whole reply path on every post and add its picks to the pools, to be rated.
+
+    Use it after the bank or the search changes, so the key covers what the bot now picks.
+    Returns {added, picks, long}: new pool quotes, picks seen, and picks over the automatic length limit.
+    """
+    from comrade import reply
+    from comrade.config import config
+
+    texts = [p["text"] for p in load()["posts"]]
+    with ThreadPoolExecutor(workers) as pool:
+        found = dict(zip(texts, pool.map(lambda t: reply.find(db.connect(), t)["picks"], texts)))
+    picks = [q for qs in found.values() for q in qs]
+    with _lock:
+        key = load()
+        added = sum(_extend(p, found.get(p["text"], [])) for p in key["posts"])
+        _save(key)
+    return {"added": added, "picks": len(picks), "long": sum(len(q["text"]) > config.MAX_QUOTE_CHARS for q in picks)}
+
+
 def grade(post_id: str, quote_hash: str, value) -> None:
     """Record a grade, or clear it when value is None."""
     if value is not None and value not in GRADES:
